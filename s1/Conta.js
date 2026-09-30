@@ -13,6 +13,10 @@ export class Conta {
     return this.#saldo;
   }
 
+  saldoDisponivel() {
+    return this.#saldo
+  }
+
   get titular() {
     return this.#titular;
   }
@@ -32,7 +36,7 @@ export class Conta {
 
   sacar(valor) {
     if (!(valor > 0)) throw new Error('Saque deve ser positivo');
-    if (valor > this.#saldo) throw new Error('Saldo insuficiente');
+    if (valor > this.saldoDisponivel()) throw new Error('Saldo insuficiente');
     this.#saldo -= valor;
   }
 }
