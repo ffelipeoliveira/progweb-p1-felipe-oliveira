@@ -5,8 +5,10 @@
 
 ## Sobre
 
+## Sobre
+
 Aplicação fullstack (API Express em camadas + SQLite + frontend Bootstrap com Vanilla JS).
-O domínio do projeto será definido na Semana 2.
+**Domínio:** Calculadora e Banco de Impressões, Modelos e Materiais para Impressões 3D. A modelagem está em [MODELAGEM.md](MODELAGEM.md).
 
 ## Estrutura
 
