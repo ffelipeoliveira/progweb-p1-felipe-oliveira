@@ -14,7 +14,7 @@ A partir do custo de material, tipo de material e tempo de impressão de um mode
 | Impressora | id, modelo, marca, areaDeImpressao | responsável por realizar impressões |
 | Material | id, tipo, marca, preco | consumido na impressão |
 | Modelo3D | id, peso, tamanho, tempoDeImpressao | modelo usado para impressões |
-| Impressao | id, custo, tamanho | impressão finalizada |
+| Impressao | id, modelo3DId, custo, tamanho | impressão de um modelo 3D |
 | Embalagem | id, custo, tamanho, opcionais | embalagem para embalar a impressão |
 | Venda | id, preco, custo, lucro | venda finalizada
 
@@ -52,6 +52,7 @@ classDiagram
 
   class Impressao {
     +id
+    +modelo3DId
     +custo
     +tamanho
   }
@@ -119,6 +120,7 @@ classDiagram
   Impressora "1" --> "0..*" ImprimirService : faz
   Modelo3D "1" --> "0..*" ImprimirService : usado em
   ImprimirService "1" --> "1" Impressao : cria
+  Modelo3D "1" --> "0..*" Impressao : origem
 
   Impressao "1..*" --> "1" VenderService : vendido em
   Embalagem "1" --> "1" VenderService : usado em

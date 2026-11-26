@@ -11,8 +11,8 @@ export const impressaoModel = {
     return impressoes.find((impressao) => impressao.id === id) ?? null;
   },
 
-  inserir({ custo, tamanho }) {
-    const novaImpressao = { id: proximoId++, custo, tamanho };
+  inserir({ modelo3DId, custo, tamanho }) {
+    const novaImpressao = { id: proximoId++, modelo3DId, custo, tamanho };
     impressoes.push(novaImpressao);
     return novaImpressao;
   },

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Impressões 3D · Painel</title>
+  <!-- Bootstrap 5.3.8 via CDN, com SRI: o navegador confere o hash do arquivo -->
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+    crossorigin="anonymous">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-body-tertiary">
+  <header class="bg-primary text-white py-3 mb-4">
+    <div class="container">
+      <h1 class="h3 mb-0">Impressões 3D</h1>
+      <p class="mb-0 small">Gerencie modelos 3D e acompanhe suas impressões.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Resultado das ações (criar, editar, remover) -->
+    <div id="aviso" class="alert d-none" role="status" aria-live="polite"></div>
+
+    <section class="row g-4 mb-5" aria-labelledby="titulo-modelo">
+      <div class="col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <h2 id="titulo-modelo" class="h5 mb-0">Cadastrar modelo 3D</h2>
+          </div>
+          <form id="form-modelo" class="card-body">
+            <div class="mb-3">
+              <label for="mod-peso" class="form-label">Peso (g)</label>
+              <input id="mod-peso" name="peso" type="number" class="form-control"
+                min="0.01" step="0.01" required>
+            </div>
+            <div class="mb-3">
+              <label for="mod-tamanho" class="form-label">Tamanho</label>
+              <input id="mod-tamanho" name="tamanho" type="text" class="form-control"
+                placeholder="Ex.: 10 × 10 × 10 cm" required>
+            </div>
+            <div class="mb-3">
+              <label for="mod-tempo" class="form-label">Tempo de impressão (segundos)</label>
+              <input id="mod-tempo" name="tempoDeImpressao" type="number"
+                class="form-control" min="0" step="1" required>
+            </div>
+            <div class="d-flex gap-2">
+              <button id="mod-salvar" type="submit" class="btn btn-primary">
+                Cadastrar modelo
+              </button>
+              <button id="mod-cancelar" type="button"
+                class="btn btn-outline-secondary d-none">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <h2 class="h6 text-muted">Modelos 3D cadastrados</h2>
+                <p id="modelos-total" class="h3 mb-0">0</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <h2 class="h6 text-muted">Impressões registradas</h2>
+                <p id="impressoes-total" class="h3 mb-0">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <h2 class="h5 mb-0">Modelos 3D</h2>
+          </div>
+          <div class="card-body">
+            <div id="modelos-carregando" class="text-center py-4">
+              <div class="spinner-border text-primary" aria-hidden="true"></div>
+              <p class="text-muted mt-2 mb-0">Carregando modelos…</p>
+            </div>
+
+            <div id="modelos-erro" class="alert alert-danger mb-0 d-none" role="alert">
+              <p id="modelos-erro-msg" class="mb-2"></p>
+              <button id="modelos-recarregar" type="button"
+                class="btn btn-sm btn-outline-danger">Tentar de novo</button>
+            </div>
+
+            <p id="modelos-vazio" class="text-muted text-center py-4 mb-0 d-none">
+              Nenhum modelo cadastrado. Use o formulário para adicionar o primeiro.
+            </p>
+
+            <div id="modelos-sucesso" class="table-responsive d-none">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Tamanho</th>
+                    <th scope="col">Peso</th>
+                    <th scope="col">Tempo</th>
+                    <th scope="col" class="text-end">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="modelos-linhas"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="row g-4 mb-5" aria-labelledby="titulo-impressao">
+      <div class="col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <h2 id="titulo-impressao" class="h5 mb-0">Registrar impressão</h2>
+          </div>
+          <form id="form-impressao" class="card-body">
+            <div class="mb-3">
+              <label for="imp-modelo" class="form-label">Modelo 3D</label>
+              <select id="imp-modelo" name="modelo3DId" class="form-select" required>
+                <option value="">Carregando modelos…</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="imp-tamanho" class="form-label">Tamanho da impressão</label>
+              <input id="imp-tamanho" name="tamanho" type="text" class="form-control"
+                placeholder="Ex.: 10 × 10 × 10 cm" required>
+            </div>
+            <div class="mb-3">
+              <label for="imp-custo" class="form-label">Custo (R$)</label>
+              <input id="imp-custo" name="custo" type="number" class="form-control"
+                min="0" step="0.01" placeholder="0,00" required>
+            </div>
+            <div class="d-flex gap-2">
+              <button id="imp-salvar" type="submit" class="btn btn-primary">
+                Registrar impressão
+              </button>
+              <button id="imp-cancelar" type="button"
+                class="btn btn-outline-secondary d-none">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <h2 class="h6 text-muted">Custo total registrado</h2>
+                <p id="impressoes-custo-total" class="h3 mb-0">R$ 0,00</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <h2 class="h5 mb-0">Impressões</h2>
+          </div>
+          <div class="card-body">
+            <div id="impressoes-carregando" class="text-center py-4">
+              <div class="spinner-border text-primary" aria-hidden="true"></div>
+              <p class="text-muted mt-2 mb-0">Carregando impressões…</p>
+            </div>
+            <div id="impressoes-erro" class="alert alert-danger mb-0 d-none" role="alert">
+              <p id="impressoes-erro-msg" class="mb-2"></p>
+              <button id="impressoes-recarregar" type="button"
+                class="btn btn-sm btn-outline-danger">Tentar de novo</button>
+            </div>
+            <p id="impressoes-vazio" class="text-muted text-center py-4 mb-0 d-none">
+              Nenhuma impressão registrada. Cadastre um modelo e registre a primeira.
+            </p>
+            <div id="impressoes-sucesso" class="table-responsive d-none">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Modelo 3D</th>
+                    <th scope="col">Tamanho</th>
+                    <th scope="col">Custo</th>
+                    <th scope="col" class="text-end">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="impressoes-linhas"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="container text-muted small pb-4">
+    Programação Web · UEPB · 2026.2
+  </footer>
+
+  <!-- type="module": habilita import/export e só roda depois de o HTML virar DOM -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>
