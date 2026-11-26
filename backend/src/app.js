@@ -2,6 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import modelo3DRouter from './routes/modelo3D.js';
 import impressaoRouter from './routes/impressao.js';
+import materialRouter from './routes/materiais.js';
+import impressoraRouter from './routes/impressoras.js';
+import embalagemRouter from './routes/embalagens.js';
+import vendaRouter from './routes/vendas.js';
 import { logger } from './middleware/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -16,12 +20,20 @@ app.use(logger);         // loga toda requisição
 
 // --- Health check ---
 app.get('/', (req, res) => {
-  res.json({ api: 'Grafica API', versao: '1.0.0', rotas: ['/impressoes', '/modelos'] });
+  res.json({
+    api: 'Grafica API',
+    versao: '1.0.0',
+    rotas: ['/impressoes', '/modelos', '/materiais', '/impressoras', '/embalagens', '/vendas'],
+  });
 });
 
 // --- Rotas ---
 app.use('/impressoes', impressaoRouter);
 app.use('/modelos', modelo3DRouter);
+app.use('/materiais', materialRouter);
+app.use('/impressoras', impressoraRouter);
+app.use('/embalagens', embalagemRouter);
+app.use('/vendas', vendaRouter);
 
 // --- 404 para rotas que não existem ---
 app.use((req, res) => {

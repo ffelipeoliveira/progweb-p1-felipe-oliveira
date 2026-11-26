@@ -1,37 +1,35 @@
-// "Banco de dados" em memória: um array. Na S5 vira SQLite.
-let modelos3D = [];
-let proximoId = 1;
+import { db } from '../db.js';
+
+const campos = 'id, peso, tamanho, tempo_de_impressao AS tempoDeImpressao';
 
 export const modelo3DModel = {
   listar() {
-    return modelos3D;
+    return db.prepare(`SELECT ${campos} FROM modelos3d ORDER BY id`).all();
   },
 
   buscarPorId(id) {
-    return modelos3D.find((modelo3D) => modelo3D.id === id) ?? null;
+    return db.prepare(`SELECT ${campos} FROM modelos3d WHERE id = ?`).get(id) ?? null;
   },
 
   inserir({ peso, tamanho, tempoDeImpressao }) {
-    const novoModelo3D = {
-      id: proximoId++,
-      peso,
-      tamanho,
-      tempoDeImpressao,
-    };
-    modelos3D.push(novoModelo3D);
-    return novoModelo3D;
+    const resultado = db
+      .prepare('INSERT INTO modelos3d (peso, tamanho, tempo_de_impressao) VALUES (?, ?, ?)')
+      .run(peso, tamanho, tempoDeImpressao);
+    return this.buscarPorId(Number(resultado.lastInsertRowid));
   },
 
   atualizar(id, dados) {
-    const i = modelos3D.findIndex((modelo3D) => modelo3D.id === id);
-    if (i === -1) return null;
-    modelos3D[i] = { ...modelos3D[i], ...dados, id }; // o id nunca muda
-    return modelos3D[i];
+    const atual = this.buscarPorId(id);
+    if (!atual) return null;
+    const atualizado = { ...atual, ...dados, id };
+    db.prepare(
+      'UPDATE modelos3d SET peso = ?, tamanho = ?, tempo_de_impressao = ? WHERE id = ?',
+    ).run(atualizado.peso, atualizado.tamanho, atualizado.tempoDeImpressao, id);
+    return this.buscarPorId(id);
   },
 
   remover(id) {
-    const antes = modelos3D.length;
-    modelos3D = modelos3D.filter((modelo3D) => modelo3D.id !== id);
-    return modelos3D.length < antes; // true = removeu
+    const resultado = db.prepare('DELETE FROM modelos3d WHERE id = ?').run(id);
+    return resultado.changes > 0;
   },
 };

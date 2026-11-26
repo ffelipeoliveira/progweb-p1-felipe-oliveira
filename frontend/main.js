@@ -1,8 +1,16 @@
 import { criarStore } from './js/state/store.js';
 import { impressaoService } from './js/services/impressaoService.js';
 import { modelo3DService } from './js/services/modelo3DService.js';
+import { materialService } from './js/services/materialService.js';
+import { impressoraService } from './js/services/impressoraService.js';
+import { embalagemService } from './js/services/embalagemService.js';
+import { vendaService } from './js/services/vendaService.js';
 import { impressaoView } from './js/ui/impressaoView.js';
 import { modelo3DView } from './js/ui/modelo3DView.js';
+import { materialView } from './js/ui/materialView.js';
+import { impressoraView } from './js/ui/impressoraView.js';
+import { embalagemView } from './js/ui/embalagemView.js';
+import { vendaView } from './js/ui/vendaView.js';
 import { aviso } from './js/ui/aviso.js';
 
 const modelos = criarStore({
@@ -117,6 +125,78 @@ function cancelarEdicao() {
   impressoes.set({ editandoId: null });
 }
 
+function iniciarCrud({ service, view, mensagens }) {
+  const estado = criarStore({
+    status: 'carregando',
+    items: [],
+    erro: null,
+    editandoId: null,
+    salvando: false,
+  });
+
+  estado.assinar(view.render);
+
+  async function carregar() {
+    estado.set({ status: 'carregando', erro: null });
+    try {
+      const items = await service.listar();
+      estado.set({ status: items.length ? 'sucesso' : 'vazio', items });
+    } catch (e) {
+      estado.set({ status: 'erro', erro: e.message });
+    }
+  }
+
+  async function salvar(dados) {
+    const { editandoId } = estado.get();
+    aviso.limpar();
+    estado.set({ salvando: true });
+    try {
+      if (editandoId) await service.atualizar(editandoId, dados);
+      else await service.criar(dados);
+
+      aviso.sucesso(editandoId ? mensagens.atualizado : mensagens.cadastrado);
+      view.limparForm();
+      estado.set({ editandoId: null });
+      await carregar();
+    } catch (e) {
+      aviso.erro(e.message);
+    } finally {
+      estado.set({ salvando: false });
+    }
+  }
+
+  function editar(id) {
+    const item = estado.get().items.find((entidade) => entidade.id === id);
+    if (!item) return;
+    view.preencherForm(item);
+    estado.set({ editandoId: id });
+  }
+
+  function cancelar() {
+    view.limparForm();
+    estado.set({ editandoId: null });
+  }
+
+  async function remover(id) {
+    if (!confirm(`Remover ${mensagens.artigo} #${id}?`)) return;
+    aviso.limpar();
+    try {
+      await service.remover(id);
+      aviso.sucesso(mensagens.removido);
+      if (estado.get().editandoId === id) cancelar();
+      await carregar();
+    } catch (e) {
+      aviso.erro(e.message);
+    }
+  }
+
+  view.aoEnviar(salvar);
+  view.aoCancelar(cancelar);
+  view.aoRecarregar(carregar);
+  view.aoClicarNaLista({ editar, remover });
+  carregar();
+}
+
 async function removerModelo(id) {
   if (!confirm(`Remover o modelo 3D #${id}?`)) return;
   aviso.limpar();
@@ -157,6 +237,47 @@ impressaoView.aoRecarregar(carregarImpressoes);
 impressaoView.aoClicarNaLista({
   editar: editarImpressao,
   remover: removerImpressao,
+});
+
+iniciarCrud({
+  service: materialService,
+  view: materialView,
+  mensagens: {
+    artigo: 'o material',
+    cadastrado: 'Material cadastrado.',
+    atualizado: 'Material atualizado.',
+    removido: 'Material removido.',
+  },
+});
+iniciarCrud({
+  service: impressoraService,
+  view: impressoraView,
+  mensagens: {
+    artigo: 'a impressora',
+    cadastrado: 'Impressora cadastrada.',
+    atualizado: 'Impressora atualizada.',
+    removido: 'Impressora removida.',
+  },
+});
+iniciarCrud({
+  service: embalagemService,
+  view: embalagemView,
+  mensagens: {
+    artigo: 'a embalagem',
+    cadastrado: 'Embalagem cadastrada.',
+    atualizado: 'Embalagem atualizada.',
+    removido: 'Embalagem removida.',
+  },
+});
+iniciarCrud({
+  service: vendaService,
+  view: vendaView,
+  mensagens: {
+    artigo: 'a venda',
+    cadastrado: 'Venda cadastrada.',
+    atualizado: 'Venda atualizada.',
+    removido: 'Venda removida.',
+  },
 });
 
 carregarModelos();

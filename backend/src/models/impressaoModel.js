@@ -1,32 +1,35 @@
-// "Banco de dados" em memória: um array. Na S5 vira SQLite.
-let impressoes = [];
-let proximoId = 1;
+import { db } from '../db.js';
+
+const campos = 'id, modelo_3d_id AS modelo3DId, custo, tamanho';
 
 export const impressaoModel = {
   listar() {
-    return impressoes;
+    return db.prepare(`SELECT ${campos} FROM impressoes ORDER BY id`).all();
   },
 
   buscarPorId(id) {
-    return impressoes.find((impressao) => impressao.id === id) ?? null;
+    return db.prepare(`SELECT ${campos} FROM impressoes WHERE id = ?`).get(id) ?? null;
   },
 
   inserir({ modelo3DId, custo, tamanho }) {
-    const novaImpressao = { id: proximoId++, modelo3DId, custo, tamanho };
-    impressoes.push(novaImpressao);
-    return novaImpressao;
+    const resultado = db
+      .prepare('INSERT INTO impressoes (modelo_3d_id, custo, tamanho) VALUES (?, ?, ?)')
+      .run(modelo3DId, custo, tamanho);
+    return this.buscarPorId(Number(resultado.lastInsertRowid));
   },
 
   atualizar(id, dados) {
-    const i = impressoes.findIndex((impressao) => impressao.id === id);
-    if (i === -1) return null;
-    impressoes[i] = { ...impressoes[i], ...dados, id }; // o id nunca muda
-    return impressoes[i];
+    const atual = this.buscarPorId(id);
+    if (!atual) return null;
+    const atualizado = { ...atual, ...dados, id };
+    db.prepare(
+      'UPDATE impressoes SET modelo_3d_id = ?, custo = ?, tamanho = ? WHERE id = ?',
+    ).run(atualizado.modelo3DId, atualizado.custo, atualizado.tamanho, id);
+    return this.buscarPorId(id);
   },
 
   remover(id) {
-    const antes = impressoes.length;
-    impressoes = impressoes.filter((impressao) => impressao.id !== id);
-    return impressoes.length < antes; // true = removeu
+    const resultado = db.prepare('DELETE FROM impressoes WHERE id = ?').run(id);
+    return resultado.changes > 0;
   },
 };
