@@ -1,341 +1,88 @@
-# Tutorial S5 — Persistência com SQLite
+# Roteiro S5 — Documentação, deploy e entrega do Projeto 1
 
-**Semana 5 · Mãos à Obra · Programação Web · UEPB 2026.2**
-**Prof. Rodrigo Alves Costa · quarta-feira, 18/11/2026**
+**Semana 5 · roteiro de casa · Programação Web · UEPB 2026.2**
+**Prof. Rodrigo Alves Costa**
 
-Hoje o array em memória vira um banco de dados de verdade. Na Parte A trocamos juntos os models da `banco-api`; na Parte B você faz o mesmo no `backend/` do **seu Projeto 1**.
+Este roteiro começa onde o `S5_Tutorial_SQLite.md` termina: o `backend/` do seu Projeto 1 já persiste em SQLite e o pull request `feature/s5-sqlite` está aberto. Aqui você documenta, publica e entrega.
 
-> **Faltou hoje?** Este tutorial é completo: siga do começo ao fim. A `banco-api` pronta da Parte A está em `S5_banco-api-sqlite.zip`, anexado à atividade. Depois, siga o `S5_Roteiro_Documentacao_Deploy.md` para fechar o Projeto 1.
+**Prazo do Projeto 1: quinta 19/11, 23h59**, na atividade **"Projeto 1"** do Google Classroom.
+
+> As telas do Render e da Vercel mudam com frequência. Este roteiro descreve cada campo pelo que ele faz; se o nome de um botão estiver diferente, procure o equivalente.
+
+## Visão geral
+
+| # | Etapa | Onde | Tempo |
+|---|---|---|---|
+| 1 | Variáveis de ambiente | `backend/` | 15 min |
+| 2 | Dados de exemplo | `backend/src/db.js` | 10 min |
+| 3 | README | raiz do repositório | 30 min |
+| 4 | Merge na `main` | GitHub | 5 min |
+| 5 | Deploy do backend | Render | 20 min |
+| 6 | Deploy do frontend | Vercel | 15 min |
+| 7 | Ligar um ao outro e testar | Render + navegador | 10 min |
+| 8 | Vídeo | seu computador | 40 min |
+| 9 | Entrega | Google Classroom | 5 min |
+
+As etapas 1 a 3 são feitas na branch `feature/s5-sqlite`:
+
+```bash
+git switch feature/s5-sqlite
+```
 
 ---
 
-## Na Aula 1 vimos…
+## 1. Variáveis de ambiente
 
-1. **Persistência** (slide 5): o array mora na RAM do processo e some a cada reinício. Persistir é gravar em disco, de forma estruturada.
-2. **Modelo relacional e SQL** (slides 6 a 9): dados em tabelas, ligadas por valor (chave primária e chave estrangeira); `INSERT`, `SELECT`, `UPDATE` e `DELETE` são o CRUD em SQL (Structured Query Language).
-3. **SQLite e o DIP** (slides 10 a 14): o banco é um arquivo, e o Node 22+ já traz o módulo `node:sqlite`. Só a camada **Model** muda, porque o service depende do contrato, não da implementação (DIP, o Princípio da Inversão de Dependência da S2).
-4. **SQL Injection** (slide 15): nunca montar SQL com `+`. Sempre `?`, para o dado viajar separado do comando.
-5. **Integridade** (slide 16): a chave estrangeira impede a conta órfã da S4; a regra de negócio, com mensagem clara, mora no service.
+Três valores mudam entre o seu notebook e o servidor: a porta, o arquivo do banco e a origem liberada no CORS (Cross-Origin Resource Sharing). O código lê de `process.env`; o valor vem de fora.
 
----
+### 1.1 — CORS configurável
 
-## Roteiro da aula (2h)
+Em `backend/src/app.js`, troque o bloco do `cors` da S4 por:
 
-| Bloco | Tempo | O que acontece |
-|---|---|---|
-| Setup | 10 min | Conferir o ambiente; **merge do PR da S4**; branch de hoje |
-| Parte A | 50 min | O professor troca os models da `s3/banco-api`; você replica |
-| Parte B | 50 min | Você troca os models do `backend/` do **seu** Projeto 1 |
-| Fechamento | 10 min | Commit, push, pull request, plenária |
-
-**Entregável:** hoje não há entrega semanal separada. A entrega é o **Projeto 1** (vídeo + link do repositório + links do deploy), na atividade **"Projeto 1"** do Google Classroom, até **quinta 19/11, 23h59**. O que falta depois da aula está no `S5_Roteiro_Documentacao_Deploy.md`.
-
----
-
-# Setup (10 min)
-
-## Passo 0.1 — Conferir o ambiente
-
-```bash
-node -v      # v22 ou superior
-git --version
+```javascript
+// Em produção, a origem do front vem da variável CORS_ORIGIN.
+const origens = (process.env.CORS_ORIGIN
+  ?? 'http://localhost:5500,http://127.0.0.1:5500').split(',');
+app.use(cors({ origin: origens }));
 ```
 
-### ✅ Checkpoint 0.1
-`node -v` mostra `v22.x` ou maior. O módulo `node:sqlite` só existe a partir do Node 22.
+Sem a variável, vale o que você já tinha. Com ela, vale a lista informada (separada por vírgula).
 
-> **Node menor que 22 e sem como atualizar agora?** Veja [Plano B: better-sqlite3](#plano-b-better-sqlite3) no fim do tutorial.
+O `db.js` já lê `process.env.DB_FILE` e o `server.js` já lê `process.env.PORT`.
 
-## Passo 0.2 — Merge do pull request da S4
+### 1.2 — `.env` e `.env.example`
 
-O PR `feature/s4-frontend` ficou aberto. Hoje ele entra na `main`.
-
-**Pelo terminal** (com o `gh` autenticado), dentro da pasta do repositório:
-
-```bash
-cd progweb-p1-nome-sobrenome      # ajuste para o seu nome
-gh pr list                        # mostra o PR aberto e o número dele
-gh pr merge 4 --merge --delete-branch     # troque 4 pelo número que apareceu
-```
-
-<details>
-<summary><strong>Sem o gh? Caminho pelo site</strong></summary>
-
-1. Abra `https://github.com/SEU-USUARIO/progweb-p1-nome-sobrenome/pulls`.
-2. Abra o PR da S4 → botão verde **Merge pull request** → **Confirm merge** → **Delete branch**.
-
-</details>
-
-Agora traga a `main` atualizada e crie a branch de hoje:
-
-```bash
-git switch main
-git pull
-git switch -c feature/s5-sqlite
-```
-
-### ✅ Checkpoint 0.2
-`ls` mostra `MODELAGEM.md`, `README.md`, `backend/`, `frontend/`, `s1/`, `s2/`, `s3/` e `s4/`. `git branch` mostra `* feature/s5-sqlite`.
-
-> **Faltou na S4, ou a sua `s3/banco-api` não roda?** Descompacte o `S5_banco-api-sqlite.zip` por cima da pasta `s3/banco-api`, rode `npm install` e acompanhe a Parte A lendo os arquivos prontos.
-
----
-
-# Parte A — A banco-api ganha um banco (50 min)
-
-Trabalhamos em **`s3/banco-api`**, a mesma API da S3, que na S4 ganhou o CORS. O plano:
+Crie `backend/.env` (ele **não** vai para o Git; já está no `.gitignore` desde a S3):
 
 ```
-routes        →  não muda
-controllers   →  não muda
-services      →  não muda   (até o Passo A7, que acrescenta UMA regra)
-models        →  array  →  SQLite     ← só aqui
+PORT=3000
+DB_FILE=banco.db
+CORS_ORIGIN=http://localhost:5500,http://127.0.0.1:5500
 ```
 
-O contrato que os services usam fica igual:
+Crie `backend/.env.example`, com o mesmo conteúdo. Este **vai** para o Git: mostra a quem clona o que precisa ser configurado.
 
-| Model | Métodos (os mesmos da S3) |
-|---|---|
-| `clienteModel` | `listar` · `buscarPorId` · `existeCpf` · `inserir` · `atualizar` · `remover` |
-| `contaModel` | `listar` · `listarPorCliente` · `buscarPorId` · `inserir` · `atualizar` · `remover` |
+### 1.3 — `package.json`
 
-## Passo A1 — Ver o problema uma última vez
-
-```bash
-cd s3/banco-api
-npm install        # se ainda não instalou nesta máquina
-npm run dev
-```
-
-No Thunder Client: `POST http://localhost:3000/clientes` com
+Em `backend/package.json`, ajuste o script `dev` e acrescente `engines`:
 
 ```json
-{ "nome": "Ana Silva", "cpf": "111", "email": "ana@x.com" }
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch --env-file-if-exists=.env src/server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
 ```
 
-Depois `GET /clientes`: a Ana está lá. Agora, no terminal, **`Ctrl+C`** e `npm run dev` de novo. `GET /clientes` → `[]`.
+- `--env-file-if-exists=.env` (Node 22) carrega o `.env` sem precisar do pacote `dotenv`.
+- `engines` avisa ao Render qual versão do Node usar.
 
-### ✅ Checkpoint A1
-Depois do restart, `GET /clientes` devolve `[]`. É a última vez.
+### ✅ Checkpoint 1
+`npm run dev` sobe normalmente e o front local continua funcionando. Mude `PORT=3001` no `.env`, salve, reinicie: a API sobe na 3001. Volte para 3000.
 
-## Passo A2 — `src/db.js`: a conexão e o schema
-
-Crie o arquivo `s3/banco-api/src/db.js`:
-
-```javascript
-import { DatabaseSync } from 'node:sqlite';
-
-// O banco inteiro é um arquivo. Se não existir, o SQLite cria.
-const arquivo = process.env.DB_FILE ?? 'banco.db';
-export const db = new DatabaseSync(arquivo);
-
-// No SQLite a checagem de chave estrangeira vem desligada.
-// Tem de ligar a cada conexão.
-db.exec('PRAGMA foreign_keys = ON;');
-
-// O schema. IF NOT EXISTS: este arquivo roda toda vez que o servidor sobe.
-db.exec(`
-  CREATE TABLE IF NOT EXISTS clientes (
-    id    INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome  TEXT NOT NULL,
-    cpf   TEXT NOT NULL UNIQUE,
-    email TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS contas (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    tipo       TEXT NOT NULL CHECK (tipo IN ('corrente', 'poupanca')),
-    saldo      REAL NOT NULL,
-    cliente_id INTEGER NOT NULL REFERENCES clientes(id),
-    criada_em  TEXT NOT NULL
-  );
-`);
-```
-
-**Pare e explique:**
-- **`node:sqlite`** é módulo embutido (o prefixo `node:` indica isso). Não há `npm install`.
-- **`DatabaseSync`**: API síncrona, sem `await`. Abre o arquivo; se ele não existe, cria.
-- **`process.env.DB_FILE ?? 'banco.db'`**: o nome do arquivo pode vir de uma variável de ambiente (vamos usar no deploy). Sem ela, vale `banco.db`.
-- **`PRAGMA foreign_keys = ON`**: no SQLite, a checagem de chave estrangeira vem **desligada**. Sem esta linha, a conta órfã da S4 continua possível.
-- **`IF NOT EXISTS`**: este arquivo roda toda vez que o servidor sobe.
-- **`PRIMARY KEY AUTOINCREMENT`** substitui o `proximoId++`. **`NOT NULL`** e **`UNIQUE`** repetem, dentro do banco, regras que já existiam no service.
-- **`CHECK (tipo IN (...))`**: o banco só aceita os dois tipos de conta.
-- **`REFERENCES clientes(id)`**: a chave estrangeira (FK, Foreign Key).
-- No banco os nomes são `snake_case` (`cliente_id`); no JSON da API, `camelCase` (`clienteId`). O model traduz, no Passo A5.
-
-> **Dinheiro em `REAL`?** Em sistema de verdade, não: ponto flutuante erra centavos, e o usual é `INTEGER` em centavos. Mantemos `REAL` para não mudar o contrato da S3.
-
-## Passo A3 — `src/models/clienteModel.js` com SQL
-
-**Substitua todo o conteúdo** do arquivo por:
-
-```javascript
-import { db } from '../db.js';
-
-// Mesmo contrato da S3 (listar, buscarPorId, existeCpf, inserir,
-// atualizar, remover). Só o "como" mudou: o array virou tabela.
-export const clienteModel = {
-  listar() {
-    return db.prepare('SELECT * FROM clientes ORDER BY id').all();
-  },
-
-  buscarPorId(id) {
-    return db.prepare('SELECT * FROM clientes WHERE id = ?').get(id) ?? null;
-  },
-
-  existeCpf(cpf) {
-    const linha = db.prepare('SELECT 1 FROM clientes WHERE cpf = ?').get(cpf);
-    return linha !== undefined;
-  },
-
-  inserir({ nome, cpf, email }) {
-    const r = db
-      .prepare('INSERT INTO clientes (nome, cpf, email) VALUES (?, ?, ?)')
-      .run(nome, cpf, email ?? null);
-    return this.buscarPorId(r.lastInsertRowid);
-  },
-
-  atualizar(id, dados) {
-    const atual = this.buscarPorId(id);
-    if (!atual) return null;
-    const novo = { ...atual, ...dados };
-    db.prepare('UPDATE clientes SET nome = ?, cpf = ?, email = ? WHERE id = ?')
-      .run(novo.nome, novo.cpf, novo.email ?? null, id); // o id nunca muda
-    return this.buscarPorId(id);
-  },
-
-  remover(id) {
-    const r = db.prepare('DELETE FROM clientes WHERE id = ?').run(id);
-    return r.changes > 0; // true = removeu
-  },
-};
-```
-
-**Pare e explique:**
-- `db.prepare(sql)` compila a instrução. Depois: **`.all()`** devolve um array de linhas; **`.get()`** devolve uma linha ou `undefined`; **`.run()`** executa `INSERT`, `UPDATE` ou `DELETE` e devolve `{ changes, lastInsertRowid }`.
-- Os **`?`** são placeholders: o valor viaja separado do SQL. É o que impede a SQL Injection (slide 15). **Nunca** monte SQL com `+` ou `${}` usando dados que vieram de `req`.
-- `email ?? null`: o `node:sqlite` não aceita `undefined` como valor. Campo opcional precisa virar `null`.
-- `inserir` grava e **relê a linha** do banco, para devolver o mesmo objeto de antes: `{ id, nome, cpf, email }`.
-- `atualizar` lê a linha atual, mistura com os dados novos e grava. O `id` fica fora do `SET`: ele nunca muda.
-- `r.changes > 0` responde "removeu ou não?", o mesmo `true`/`false` que o service já esperava.
-- **Compare os nomes e os parâmetros dos métodos com os da S3: são idênticos.**
-
-## Passo A4 — Rodar, testar e reiniciar
-
-O `node --watch` já reiniciou o servidor. Se você o tinha parado: `npm run dev`.
-
-No terminal aparece um aviso:
-
-```
-ExperimentalWarning: SQLite is an experimental feature and might change at any time
-```
-
-É **esperado** no Node 22: o módulo funciona, e o aviso só informa que a API ainda pode mudar em versões futuras.
-
-Repita, no Thunder Client, os testes da S3:
-
-| # | Requisição | Body | Esperado |
-|---|---|---|---|
-| 1 | `POST /clientes` | `{ "nome": "Ana Silva", "cpf": "111", "email": "ana@x.com" }` | **201** + objeto com `id: 1` |
-| 2 | `POST /clientes` | `{ "nome": "Bruno Costa", "cpf": "222" }` | **201**, com `"email": null` |
-| 3 | `POST /clientes` | `{ "nome": "X", "cpf": "111" }` | **409** (regra do service) |
-| 4 | `POST /clientes` | `{ "cpf": "333" }` | **400** |
-| 5 | `GET /clientes` | | **200**, dois clientes |
-| 6 | `GET /clientes/999` | | **404** |
-| 7 | `PUT /clientes/1` | `{ "email": "ana@uepb.edu.br" }` | **200**, só o e-mail mudou |
-
-Agora a prova: no terminal, **`Ctrl+C`**, depois `npm run dev`, depois `GET /clientes`.
-
-### ✅ Checkpoint A4
-Depois do restart, `GET /clientes` **devolve a Ana e o Bruno**. Na pasta `s3/banco-api` apareceu o arquivo `banco.db`.
-
-> As rotas de `contas` ainda usam o array da S3. Vamos trocar no próximo passo.
-
-## Passo A5 — `src/models/contaModel.js` com SQL
-
-**Substitua todo o conteúdo** do arquivo por:
-
-```javascript
-import { db } from '../db.js';
-
-// No banco: snake_case (cliente_id). No JSON da API: camelCase (clienteId).
-// O AS traduz aqui, na única camada que conhece o banco.
-const COLUNAS = `id, tipo, saldo,
-  cliente_id AS clienteId, criada_em AS criadaEm`;
-
-export const contaModel = {
-  listar() {
-    return db.prepare(`SELECT ${COLUNAS} FROM contas ORDER BY id`).all();
-  },
-
-  listarPorCliente(clienteId) {
-    return db
-      .prepare(`SELECT ${COLUNAS} FROM contas WHERE cliente_id = ? ORDER BY id`)
-      .all(clienteId);
-  },
-
-  buscarPorId(id) {
-    return db
-      .prepare(`SELECT ${COLUNAS} FROM contas WHERE id = ?`)
-      .get(id) ?? null;
-  },
-
-  inserir({ tipo, saldo, clienteId }) {
-    const r = db
-      .prepare(`INSERT INTO contas (tipo, saldo, cliente_id, criada_em)
-                VALUES (?, ?, ?, ?)`)
-      .run(tipo, Number(saldo), Number(clienteId), new Date().toISOString());
-    return this.buscarPorId(r.lastInsertRowid);
-  },
-
-  atualizar(id, dados) {
-    const atual = this.buscarPorId(id);
-    if (!atual) return null;
-    const novo = { ...atual, ...dados };
-    db.prepare('UPDATE contas SET tipo = ?, saldo = ?, cliente_id = ? WHERE id = ?')
-      .run(novo.tipo, Number(novo.saldo), Number(novo.clienteId), id);
-    return this.buscarPorId(id);
-  },
-
-  remover(id) {
-    const r = db.prepare('DELETE FROM contas WHERE id = ?').run(id);
-    return r.changes > 0;
-  },
-};
-```
-
-**Pare e explique:**
-- **`COLUNAS`** lista as colunas e usa **`AS`** para devolver `clienteId` e `criadaEm`, os nomes que a API da S3 e o front da S4 já usam. A tradução fica na única camada que conhece o banco.
-- `${COLUNAS}` dentro do SQL **não** é injeção: é uma constante escrita por nós, não um dado do usuário.
-- `Number(saldo)` e `Number(clienteId)`: o JSON pode trazer `"1500"` como texto; o model garante o tipo.
-
-Teste:
-
-| # | Requisição | Body | Esperado |
-|---|---|---|---|
-| 8 | `POST /contas` | `{ "tipo": "poupanca", "saldo": 1500.5, "clienteId": 1 }` | **201**, com `clienteId` e `criadaEm` |
-| 9 | `POST /contas` | `{ "tipo": "corrente", "saldo": 1, "clienteId": 999 }` | **422** |
-| 10 | `POST /contas` | `{ "tipo": "salario", "saldo": 1, "clienteId": 1 }` | **400** |
-| 11 | `GET /contas?clienteId=1` | | **200**, uma conta |
-| 12 | `PUT /contas/1` | `{ "saldo": 2000 }` | **200**, saldo novo |
-
-### ✅ Checkpoint A5
-A resposta do teste 8 tem as chaves `clienteId` e `criadaEm` (e **não** `cliente_id`). Reinicie o servidor: a conta continua lá.
-
-## Passo A6 — A prova do DIP: `git diff --stat`
-
-No terminal, na pasta `s3/banco-api`:
-
-```bash
-git add -A
-git status --short
-git diff --cached --stat
-```
-
-### ✅ Checkpoint A6
-A lista tem **só** `src/db.js` (novo), `src/models/clienteModel.js` e `src/models/contaModel.js`. Nenhum arquivo de `services/`, `controllers/` ou `routes/`. Trocamos o banco inteiro mexendo em três arquivos.
-
-Se `banco.db` apareceu na lista, tire-o do Git e ignore-o. Edite `s3/banco-api/.gitignore`:
+Confira o `backend/.gitignore`:
 
 ```
 node_modules/
@@ -343,543 +90,329 @@ node_modules/
 banco.db
 ```
 
-```bash
-git rm --cached banco.db      # só se ele apareceu no git status
-git add -A
-```
+---
 
-> O que vai para o Git é o **schema** (no `db.js`). Os dados são de cada máquina.
+## 2. Dados de exemplo
 
-## Passo A7 — A conta órfã, do 500 ao 409
+No plano grátis do Render, o disco é **efêmero**: o serviço é suspenso após 15 minutos sem acesso e, a cada reinício, o `banco.db` é apagado. Para a demonstração nunca abrir vazia, o `db.js` insere dados de exemplo **quando o banco está vazio**.
 
-Na S4 você removeu um cliente e a conta dele ficou órfã. Tente agora, com a conta do teste 8 ainda cadastrada:
-
-`DELETE /clientes/1` → **500** `{ "erro": "FOREIGN KEY constraint failed" }`
-
-O banco **recusou**: o dado está protegido. Mas a resposta é ruim: 500 significa "erro do servidor", e a mensagem não ajuda o usuário. "Cliente com contas não pode ser removido" é uma **regra de negócio**, e regra de negócio mora no **service**.
-
-Em `src/services/clienteService.js`, acrescente o `import` do `contaModel` e a regra no `remover`:
+No fim de `backend/src/db.js`, adapte para as suas tabelas (o exemplo usa as da `banco-api`):
 
 ```javascript
-import { clienteModel } from '../models/clienteModel.js';
-import { contaModel } from '../models/contaModel.js';
-import { erro } from '../utils/erro.js';
-
-export const clienteService = {
-  listar() {
-    return clienteModel.listar();
-  },
-
-  buscarPorId(id) {
-    const cliente = clienteModel.buscarPorId(id);
-    if (!cliente) throw erro(404, 'Cliente não encontrado');
-    return cliente;
-  },
-
-  criar({ nome, cpf, email } = {}) {
-    // Regra 1: nome e cpf são obrigatórios
-    if (!nome || !cpf) throw erro(400, 'Campos "nome" e "cpf" são obrigatórios');
-    // Regra 2: cpf é único
-    if (clienteModel.existeCpf(cpf)) throw erro(409, 'Já existe um cliente com este CPF');
-    return clienteModel.inserir({ nome, cpf, email });
-  },
-
-  atualizar(id, dados = {}) {
-    const atualizado = clienteModel.atualizar(id, dados);
-    if (!atualizado) throw erro(404, 'Cliente não encontrado');
-    return atualizado;
-  },
-
-  remover(id) {
-    // Regra nova (S5): cliente com contas não pode ser removido
-    if (contaModel.listarPorCliente(id).length > 0) {
-      throw erro(409, 'Cliente possui contas. Remova as contas primeiro.');
-    }
-    const removido = clienteModel.remover(id);
-    if (!removido) throw erro(404, 'Cliente não encontrado');
-  },
-};
+// Dados de exemplo: só entram se o banco estiver vazio.
+// No Render grátis o arquivo some a cada reinício; assim a demo nunca abre vazia.
+const { total } = db.prepare('SELECT COUNT(*) AS total FROM clientes').get();
+if (total === 0) {
+  const r = db
+    .prepare('INSERT INTO clientes (nome, cpf, email) VALUES (?, ?, ?)')
+    .run('Ana Silva', '11122233344', 'ana@exemplo.com');
+  db.prepare(`INSERT INTO contas (tipo, saldo, cliente_id, criada_em)
+              VALUES (?, ?, ?, ?)`)
+    .run('corrente', 1500, r.lastInsertRowid, new Date().toISOString());
+}
 ```
 
-Teste de novo:
+Insira dois ou três registros de cada entidade. Use **dados fictícios**: nada de CPF, e-mail ou telefone de pessoas reais em um repositório público.
 
-| # | Requisição | Esperado |
-|---|---|---|
-| 13 | `DELETE /clientes/1` (com conta) | **409** `Cliente possui contas. Remova as contas primeiro.` |
-| 14 | `DELETE /contas/1` | **204** |
-| 15 | `DELETE /clientes/1` (sem conta) | **204** |
-| 16 | `DELETE /clientes/1` de novo | **404** |
+### ✅ Checkpoint 2
+Pare o servidor, apague o `banco.db`, suba de novo: `GET` na sua rota principal já devolve os dados de exemplo. Reinicie sem apagar: os dados **não** duplicam.
 
-**Pare e explique:**
-- Isto **não** contradiz o "services não mudam". A troca do banco não exigiu mudança nenhuma (Checkpoint A6). O que entrou agora foi uma **regra nova**, que o array escondia.
-- As duas barreiras se completam: o **banco** garante que o dado nunca fica inconsistente; o **service** explica a regra, com o status e a mensagem certos.
-- Abra o front da S4 (`npx http-server -p 5500 -c-1` em `s4/banco-frontend`) e tente remover um cliente com conta: a mensagem do 409 aparece na tela, sem mudar uma linha do front.
-
-### ✅ Checkpoint A7
-`DELETE` de um cliente com conta devolve **409** com a mensagem acima.
-
-## Passo A8 — Tentar uma SQL Injection
-
-`POST /clientes` com:
-
-```json
-{ "nome": "Mallory", "cpf": "' OR '1'='1" }
-```
-
-### ✅ Checkpoint A8
-A resposta é **201**, e o `cpf` foi gravado como o texto `' OR '1'='1`. Nada quebrou e nada vazou: com `?`, o valor é **dado**, nunca comando. `GET /clientes` mostra a Mallory com um CPF esquisito. (Remova-a depois.)
-
-## Passo A9 — Olhar dentro do banco (opcional)
-
-Instale no VS Code a extensão **SQLite Viewer** e clique em `banco.db`: aparecem as tabelas `clientes` e `contas`, com as linhas que você criou. Também aparece `sqlite_sequence`, que o SQLite usa para o `AUTOINCREMENT`.
-
-## Passo A10 — Commit da Parte A
-
-```bash
-cd ../..            # volta para a raiz do repositório
-git add s3/
-git commit -m "feat(s5): banco-api persiste em SQLite (node:sqlite)"
-git push -u origin feature/s5-sqlite
-```
-
-### ✅ Checkpoint A10
-`git status` limpo. No GitHub, a branch `feature/s5-sqlite` existe e **não** contém `banco.db`.
-
-## Desafio (para quem terminou antes)
-
-`PUT /clientes/2` com `{ "cpf": "111" }`, sendo `111` o CPF de outro cliente. Na S3 isso passava e duplicava o CPF; agora o `UNIQUE` barra, com **500** `UNIQUE constraint failed: clientes.cpf`. Corrija do jeito certo: uma regra no `clienteService.atualizar` que responda **409**. Dica: você vai precisar de um método novo no model, `buscarPorCpf(cpf)`, para saber se o CPF pertence a **outro** cliente.
+> **Isto resolve a persistência em produção?** Não. É um paliativo para a demonstração. A solução de verdade é um disco persistente (pago) ou um banco gerenciado, como o PostgreSQL. E, graças às camadas, essa troca aconteceria só no model. A prova de persistência do Projeto 1 é **local** e vai no vídeo (etapa 8).
 
 ---
 
-# Parte B — O banco do seu Projeto 1 (50 min)
+## 3. README
 
-Agora o mesmo, na pasta **`backend/`** da raiz do repositório, com as suas duas entidades.
+Substitua o `README.md` da raiz por um que responda, nesta ordem: o que é, onde está no ar, como rodar, quais são as rotas e como o código se organiza. Modelo:
+
+````markdown
+# Nome do seu sistema
+
+Uma ou duas frases: o que o sistema faz e para quem.
+Projeto 1 da disciplina Programação Web (UEPB, 2026.2).
+
+- **Aplicação:** https://SEU-FRONT.vercel.app
+- **API:** https://SEU-SERVICO.onrender.com
+- **Vídeo de apresentação:** (link)
+
+> A API está no plano grátis do Render: o primeiro acesso pode levar cerca de
+> um minuto, e os dados voltam aos de exemplo a cada reinício do serviço.
+
+## Tecnologias
+
+- Backend: Node.js 22, Express 5, SQLite (`node:sqlite`, SQL puro)
+- Frontend: HTML, CSS, Bootstrap 5, JavaScript puro (ES Modules, `fetch`)
+
+## Como rodar localmente
+
+Pré-requisito: Node.js 22 ou superior.
 
 ```bash
+# 1. API
 cd backend
-npm install        # se ainda não instalou nesta máquina
-```
+npm install
+cp .env.example .env
+npm run dev                      # http://localhost:3000
 
-## Passo B1 — Planejar as tabelas
-
-Abra os seus dois models. Para cada entidade, anote os campos e decida o tipo de cada coluna:
-
-| No JavaScript | No SQLite | Observação |
-|---|---|---|
-| texto | `TEXT` | |
-| número inteiro | `INTEGER` | |
-| número com casas decimais | `REAL` | |
-| `true` / `false` | `INTEGER` | o SQLite não tem booleano: grave `1` ou `0` |
-| data e hora | `TEXT` | grave o `toISOString()` |
-| id do "pai" | `INTEGER NOT NULL REFERENCES pai(id)` | a chave estrangeira |
-
-E as restrições:
-- campo obrigatório no service → `NOT NULL`;
-- valor único no service (código, matrícula, e-mail) → `UNIQUE`;
-- valor dentro de uma lista (status, tipo) → `CHECK (campo IN ('a', 'b'))`.
-
-## Passo B2 — `backend/src/db.js`
-
-Copie o `db.js` da Parte A e troque os dois `CREATE TABLE` pelos seus. Exemplo, para quem modelou **categorias** e **produtos**:
-
-```javascript
-db.exec(`
-  CREATE TABLE IF NOT EXISTS categorias (
-    id   INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT NOT NULL UNIQUE
-  );
-
-  CREATE TABLE IF NOT EXISTS produtos (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome         TEXT NOT NULL,
-    preco        REAL NOT NULL,
-    ativo        INTEGER NOT NULL DEFAULT 1,
-    categoria_id INTEGER NOT NULL REFERENCES categorias(id)
-  );
-`);
-```
-
-A tabela "pai" (a que é referenciada) vem **primeiro**. Não esqueça o `PRAGMA foreign_keys = ON`.
-
-Acrescente `banco.db` ao `backend/.gitignore`.
-
-### ✅ Checkpoint B2
-`npm run dev` sobe sem erro e o arquivo `backend/banco.db` aparece. Se der `SQLITE_ERROR ... syntax error`, confira vírgulas e parênteses do `CREATE TABLE` (a última coluna **não** leva vírgula).
-
-> **Mudou o schema depois de o `banco.db` já existir?** O `CREATE TABLE IF NOT EXISTS` não altera uma tabela que já existe. Em desenvolvimento, pare o servidor, **apague o `banco.db`** e suba de novo.
-
-## Passo B3 — Reescrever o model da entidade "pai"
-
-Use o `clienteModel.js` da Parte A como molde. Regra de ouro: **os nomes dos métodos, os parâmetros e o formato do objeto devolvido ficam exatamente como estavam**. Só o corpo muda.
-
-Para cada método do seu model:
-
-| O model em memória fazia | Agora |
-|---|---|
-| `return lista;` | `db.prepare('SELECT ... ORDER BY id').all()` |
-| `lista.find(...) ?? null` | `db.prepare('SELECT ... WHERE id = ?').get(id) ?? null` |
-| `lista.some(...)` | `db.prepare('SELECT 1 FROM ... WHERE campo = ?').get(valor) !== undefined` |
-| `lista.push(novo); return novo;` | `INSERT` com `.run(...)` e `return this.buscarPorId(r.lastInsertRowid)` |
-| `lista[i] = {...}` | ler o atual, misturar, `UPDATE ... WHERE id = ?`, reler |
-| `lista = lista.filter(...)` | `DELETE ... WHERE id = ?` e `return r.changes > 0` |
-
-Lembre: todo campo opcional vai com `?? null`, e nenhum SQL é montado com `+`.
-
-### ✅ Checkpoint B3
-No Thunder Client, o `backend/TESTES.md` da S3 passa para essa entidade: 201, 200, 404 e o erro da sua regra. **Sem alterar o service nem o controller.**
-
-## Passo B4 — Reescrever o model da entidade "filha"
-
-Use o `contaModel.js` como molde. Se uma coluna tem nome composto (`categoria_id`), traduza com `AS` para o nome que o seu front já usa (`categoriaId`), como fizemos com `COLUNAS`.
-
-Se você tem um campo booleano, converta na saída, dentro do model:
-
-```javascript
-// o banco devolve 1 ou 0; a API devolvia true ou false
-const paraApi = (linha) => linha && { ...linha, ativo: linha.ativo === 1 };
-```
-
-e use `paraApi(...)` nos retornos (`.all().map(paraApi)`, `paraApi(... .get(id)) ?? null`). Na entrada, grave `ativo ? 1 : 0`.
-
-### ✅ Checkpoint B4
-Os testes do `TESTES.md` passam para a segunda entidade, incluindo o 422 de "o pai precisa existir".
-
-## Passo B5 — Testar pela tela e reiniciar
-
-Com o backend rodando, em **outro terminal**:
-
-```bash
+# 2. Frontend (em outro terminal)
 cd frontend
-npx http-server -p 5500 -c-1
+npx http-server -p 5500 -c-1     # http://localhost:5500
 ```
 
-Abra `http://localhost:5500` e faça o CRUD das duas entidades pela tela. Depois, no terminal do backend, `Ctrl+C` e `npm run dev`. Recarregue a página.
+## Rotas da API
 
-### ✅ Checkpoint B5
-Depois do restart, **os dados continuam na tela**. O front da S4 não mudou uma linha.
+| Método | Rota | O que faz | Respostas |
+|---|---|---|---|
+| GET | /categorias | Lista as categorias | 200 |
+| POST | /categorias | Cria uma categoria | 201, 400, 409 |
+| GET | /categorias/:id | Busca uma categoria | 200, 404 |
+| PUT | /categorias/:id | Atualiza uma categoria | 200, 404 |
+| DELETE | /categorias/:id | Remove uma categoria | 204, 404, 409 |
+| ... | ... | ... | ... |
 
-## Passo B6 — A regra do pai com filhos
+Erros seguem o formato `{ "erro": "mensagem" }`.
 
-Tente remover, pela tela, um "pai" que tem "filhos". O banco recusa e a tela mostra `FOREIGN KEY constraint failed`. Decida o que faz sentido no seu domínio:
+## Regras de negócio
 
-- **Bloquear:** acrescente a regra no service do pai, como no Passo A7 (409 com mensagem clara). É o mais comum.
-- **Cascatear:** se os filhos não fazem sentido sem o pai (itens de um pedido), troque a coluna para `REFERENCES pai(id) ON DELETE CASCADE`, apague o `banco.db` e suba de novo.
+- (uma linha por regra: o que é validado e qual status devolve)
 
-### ✅ Checkpoint B6
-Remover um pai com filhos mostra uma mensagem que o usuário entende, ou remove os filhos junto, conforme a sua decisão.
+## Estrutura
 
-## Passo B7 — Conferir o DIP, commit, push e pull request
+```
+backend/
+  src/
+    routes/        mapeia URL → controller
+    controllers/   lê a requisição, chama o service, responde
+    services/      regras de negócio
+    models/        acesso ao banco (SQL)
+    middleware/    logger e tratamento de erros
+    db.js          conexão e schema do SQLite
+frontend/
+  js/
+    api.js         camada HTTP (fetch)
+    services/      regras da tela
+    state/         estado da aplicação
+    ui/            desenho da tela
+MODELAGEM.md       modelagem de classes (S2)
+s1/ … s4/          exercícios das semanas
+```
+
+## Autor
+
+Seu nome · Ciência da Computação · UEPB
+````
+
+Dicas:
+- As rotas e os status já estão no seu `backend/TESTES.md` da S3.
+- Os links do topo você preenche nas etapas 5, 6 e 8.
+- Teste do README: um colega consegue rodar o projeto só com ele?
+
+Commit do que foi feito até aqui:
 
 ```bash
-cd ..               # raiz do repositório
 git add -A
-git status --short
+git commit -m "docs(p1): README, variáveis de ambiente e dados de exemplo"
+git push
 ```
 
-Confira: em `backend/`, mudaram `src/db.js`, os dois models, o `.gitignore` e, **no máximo**, o service onde entrou a regra do Passo B6. Nenhum controller, nenhuma route, nada em `frontend/`. E `banco.db` **não** está na lista.
+---
+
+## 4. Merge na `main`
+
+O Render e a Vercel publicam a partir da `main`.
 
 ```bash
-git commit -m "feat(s5): backend do Projeto 1 persiste em SQLite"
-git push
-gh pr create --base main --head feature/s5-sqlite \
-  --title "S5: persistência com SQLite" \
-  --body "Parte A: banco-api com node:sqlite. Parte B: backend/ do Projeto 1 com SQLite; services e controllers preservados."
+gh pr list
+gh pr merge 5 --merge --delete-branch     # troque 5 pelo número do PR da S5
+git switch main
+git pull
 ```
 
-<details>
-<summary><strong>Sem o gh? Caminho pelo site</strong></summary>
+(Sem o `gh`: no site do GitHub, abra o PR → **Merge pull request** → **Confirm merge** → **Delete branch**; depois `git switch main` e `git pull`.)
 
-1. Abra `https://github.com/SEU-USUARIO/progweb-p1-nome-sobrenome`.
-2. Clique na faixa amarela **Compare & pull request** (base `main`, compare `feature/s5-sqlite`).
-3. Título: `S5: persistência com SQLite`. **Create pull request**.
-
-</details>
-
-### ✅ Checkpoint B7
-O PR está **aberto**, e a aba **Files changed** não mostra `banco.db` nem `node_modules/`.
-
-**Desta vez o merge é seu.** Você continua nesta mesma branch em casa (README, variáveis de ambiente, dados de exemplo) e faz o merge antes do deploy. O passo a passo está no `S5_Roteiro_Documentacao_Deploy.md`.
+### ✅ Checkpoint 4
+No GitHub, a `main` tem `backend/src/db.js` e o README novo. Daqui em diante, os ajustes pequenos de deploy podem ser feitos direto na `main`.
 
 ---
 
-# Entrega
+## 5. Deploy do backend (Render)
 
-Hoje não há atividade semanal separada: a entrega é o **Projeto 1**, na atividade **"Projeto 1"** do Google Classroom, até **quinta 19/11, 23h59**:
+1. Crie uma conta em https://render.com entrando **com o GitHub**.
+2. **New → Web Service** e escolha o repositório `progweb-p1-nome-sobrenome` (autorize o acesso do Render ao repositório, se pedir).
+3. Preencha:
 
-- vídeo individual de 5 a 10 minutos (tela + voz);
-- link do repositório público `progweb-p1-nome-sobrenome`;
-- links do deploy (front e API).
+| Campo | Valor |
+|---|---|
+| Nome | algo como `p1-seunome-api` (vira parte da URL) |
+| Branch | `main` |
+| **Root Directory** (pasta raiz) | `backend` |
+| Runtime / Language | Node |
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+| Instance Type / Plano | **Free** |
 
-## Checklist do que a aula de hoje deixa pronto
+4. Em **Environment Variables**, por enquanto, nenhuma é obrigatória. (O Render define a `PORT` sozinho, e o `server.js` já a lê.)
+5. **Create Web Service** e acompanhe o log até aparecer a linha `🚀 … em http://localhost:…` do seu `server.js`.
 
-- [ ] O PR da S4 foi mesclado: `frontend/` está na `main`.
-- [ ] `s3/banco-api` persiste em SQLite e passa nos 16 testes da Parte A.
-- [ ] `backend/src/db.js` tem as duas tabelas, com `PRIMARY KEY`, `NOT NULL`, `REFERENCES` e o `PRAGMA foreign_keys = ON`.
-- [ ] Os dois models do `backend/` usam SQL puro, com `?` em todos os valores.
-- [ ] Nenhum SQL montado com `+` ou `${}` a partir de dados de `req`.
-- [ ] Controllers e routes do `backend/` não foram alterados; services, só para a regra do Passo B6.
-- [ ] O CRUD das duas entidades funciona pelo `frontend/`.
-- [ ] Os dados sobrevivem ao restart do servidor.
-- [ ] `banco.db` está no `.gitignore` e fora do repositório.
-- [ ] O PR `feature/s5-sqlite → main` está aberto.
+### ✅ Checkpoint 5
+`https://SEU-SERVICO.onrender.com/` devolve o JSON do health check, e `https://SEU-SERVICO.onrender.com/SUA-ROTA` devolve os dados de exemplo.
 
-**Próximo passo:** `S5_Roteiro_Documentacao_Deploy.md`.
-
-**Para a S6 (quarta 25/11):** traga o Projeto 1 rodando no notebook (back e front). Começa a Trilha 2: vamos avaliar a sua tela com as heurísticas de Nielsen.
+Se o log mostrar `No such built-in module: node:sqlite`, o Render usou um Node antigo: confira o `engines` do `package.json` (etapa 1.3) ou crie a variável de ambiente `NODE_VERSION` com o valor `22` e faça um novo deploy.
 
 ---
 
-# Problemas comuns
+## 6. Deploy do frontend (Vercel)
+
+### 6.1 — O front precisa saber onde a API mora
+
+Na S4, o comentário do `frontend/js/config.js` avisava: "No deploy (S5), o endereço muda aqui e em mais nenhum lugar". Troque o conteúdo por:
+
+```javascript
+// O único arquivo que sabe onde a API mora.
+// No seu notebook, a API local; publicado, a API do Render.
+const LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
+
+export const API_URL = LOCAL
+  ? 'http://localhost:3000'
+  : 'https://SEU-SERVICO.onrender.com';   // sem barra no final
+```
+
+```bash
+git add frontend/js/config.js
+git commit -m "chore(p1): front aponta para a API publicada"
+git push
+```
+
+### 6.2 — Publicar
+
+1. Crie uma conta em https://vercel.com entrando **com o GitHub**.
+2. **Add New → Project** e importe o repositório.
+3. Preencha:
+
+| Campo | Valor |
+|---|---|
+| **Root Directory** | `frontend` |
+| Framework Preset | **Other** |
+| Build Command | (vazio) |
+| Output Directory | (padrão) |
+
+4. **Deploy**. Ao terminar, a Vercel mostra a URL (algo como `https://p1-seunome.vercel.app`).
+
+> Prefere a Netlify? Funciona do mesmo jeito: **Add new site → Import an existing project**, com *Base directory* `frontend`, *Build command* vazio e *Publish directory* `frontend`.
+
+### ✅ Checkpoint 6
+A página abre no endereço da Vercel, com o Bootstrap aplicado. A lista ainda mostra o **estado de erro**: o CORS da API não conhece essa origem. É o esperado; a etapa 7 resolve.
+
+---
+
+## 7. Ligar um ao outro e testar
+
+No Render, abra o seu serviço → **Environment** → adicione:
+
+| Variável | Valor |
+|---|---|
+| `CORS_ORIGIN` | `https://p1-seunome.vercel.app` (a URL da Vercel, **sem barra no final**) |
+
+Salve. O Render faz um novo deploy sozinho (aguarde o log).
+
+### ✅ Checkpoint 7 — o teste de produção
+
+No endereço da Vercel:
+
+- [ ] a lista carrega os dados de exemplo (o primeiro acesso pode levar cerca de 1 minuto, com a tela em "carregando");
+- [ ] criar, editar e remover funcionam nas duas entidades;
+- [ ] violar uma regra mostra a mensagem da API na tela;
+- [ ] no DevTools (F12), a aba Console não tem erro de CORS.
+
+Atualize os links no topo do `README.md`, faça commit e push.
+
+---
+
+## 8. Vídeo (5 a 10 minutos)
+
+Grave a **tela com a sua voz**. Ferramentas que servem: OBS Studio, a gravação de tela do próprio sistema (Windows: `Win+Alt+R`; macOS: `Cmd+Shift+5`), o Loom ou uma chamada do Google Meet gravada só com você.
+
+Roteiro sugerido:
+
+| Tempo | O que mostrar |
+|---|---|
+| 0:00 – 0:30 | Quem é você, qual é o domínio do sistema |
+| 0:30 – 3:00 | **A aplicação no ar** (link da Vercel): o CRUD das duas entidades, uma mensagem de erro de regra e os estados de tela |
+| 3:00 – 4:30 | **A prova de persistência, local:** criar um registro, `Ctrl+C` no terminal da API, `npm run dev`, recarregar a página: o registro continua lá |
+| 4:30 – 8:00 | **O código:** as pastas do `backend/`; um caminho completo (route → controller → service → model); o `db.js`; um model com SQL e `?` |
+| 8:00 – 9:00 | **O DIP:** o que mudou da S3 para a S5 e o que não mudou; uma regra que mora no service |
+| 9:00 – 10:00 | O front em camadas, em uma frase por pasta; o que você faria diferente |
+
+Dicas:
+- Abra o link da API um minuto antes de gravar, para o Render "acordar".
+- Aumente a fonte do editor e do terminal.
+- Fale com as suas palavras. O que vale é você explicar o **seu** código.
+
+Publique como vídeo **não listado** no YouTube ou como arquivo no Google Drive com acesso "qualquer pessoa com o link". Coloque o link no README.
+
+---
+
+## 9. Entrega
+
+Na atividade **"Projeto 1"** do Google Classroom, até **quinta 19/11, 23h59**, envie:
+
+1. o link do vídeo;
+2. o link do repositório público `progweb-p1-nome-sobrenome`;
+3. os links do deploy (front e API).
+
+### Checklist final
+
+**Repositório**
+- [ ] É público, e a entrega está na branch `main`.
+- [ ] `backend/`: routes, controllers, services, models, middleware e `db.js`.
+- [ ] Models com SQL puro; todos os valores com `?`.
+- [ ] `PRAGMA foreign_keys = ON` e chave estrangeira entre as duas tabelas.
+- [ ] `frontend/`: camadas `api / services / state / ui` e os quatro estados de tela.
+- [ ] CRUD completo das duas entidades, pela tela.
+- [ ] `README.md` com links, como rodar, rotas e estrutura.
+- [ ] `backend/.env.example` presente; `.env`, `banco.db` e `node_modules/` ausentes.
+- [ ] Nenhum dado pessoal real nos dados de exemplo.
+
+**Deploy**
+- [ ] A API responde no Render.
+- [ ] O front abre na Vercel e conversa com a API (sem erro de CORS).
+
+**Vídeo**
+- [ ] Tem de 5 a 10 minutos, com tela e voz.
+- [ ] Mostra a aplicação, a prova de persistência local e o código.
+- [ ] O link abre em uma janela anônima (teste antes de enviar).
+
+> **O deploy não funcionou até o prazo?** Entregue assim mesmo: vídeo com tudo rodando localmente e, no README, o que você tentou e o erro que apareceu.
+
+---
+
+## Problemas comuns
 
 | Sintoma | Causa provável | Solução |
 |---|---|---|
-| `Error [ERR_UNKNOWN_BUILTIN_MODULE]: No such built-in module: node:sqlite` | Node menor que 22 | Atualize o Node, ou use o [Plano B](#plano-b-better-sqlite3) |
-| `ExperimentalWarning: SQLite is an experimental feature` | Aviso do Node 22 | É esperado; não é erro |
-| `Provided value cannot be bound to SQLite parameter 2` | Um valor `undefined` foi passado ao `.run()` ou `.get()` | Use `campo ?? null`; confira se o nome do campo no body está certo |
-| `SQLITE_ERROR ... near "...": syntax error` | Erro no SQL | Vírgula sobrando antes do `)`, aspas trocadas, nome de coluna errado |
-| `no such table: ...` | O `CREATE TABLE` não rodou, ou o nome está diferente | Confira o `db.js` e se o model importa `{ db }` de `'../db.js'` |
-| `no such column: ...` | O schema mudou, mas o `banco.db` é antigo | Pare o servidor, apague o `banco.db`, suba de novo |
-| `NOT NULL constraint failed: tabela.campo` | Faltou um campo obrigatório no `INSERT` | Confira a validação do service e a ordem dos `?` |
-| `UNIQUE constraint failed` com status 500 | O banco barrou um valor repetido que o service não checou | Acrescente a regra no service (veja o Desafio da Parte A) |
-| `FOREIGN KEY constraint failed` com status 500 | Remoção de um pai com filhos, ou filho com pai inexistente | Regra no service (Passos A7 e B6) |
-| A conta órfã ainda acontece | Faltou o `PRAGMA foreign_keys = ON` | Ele precisa rodar logo depois de abrir o banco |
-| O front mostra `undefined` em um campo | O model devolve `snake_case` e o front espera `camelCase` | Use `AS` no `SELECT` (Passo A5) |
-| `TypeError: Cannot read properties of undefined (reading 'buscarPorId')` | O método foi chamado sem o objeto (perdeu o `this`) | Chame sempre como `clienteModel.inserir(...)` |
-| `database is locked` | Dois servidores abertos no mesmo `banco.db`, ou o arquivo aberto em outro programa | Feche o outro terminal ou o programa |
-| `banco.db` aparece no `git status` | Falta a linha no `.gitignore` | Acrescente `banco.db`; se já foi adicionado, `git rm --cached banco.db` |
-| `Error: listen EADDRINUSE :::3000` | A API da Parte A ainda está rodando | `Ctrl+C` nela, ou `PORT=3001 npm run dev` (PowerShell: `$env:PORT=3001; npm run dev`) |
+| Render: `No such built-in module: node:sqlite` | Versão antiga do Node | `engines` no `package.json` ou variável `NODE_VERSION=22`; novo deploy |
+| Render: `Cannot find module …/src/server.js` ou `package.json not found` | Root Directory errado | Tem de ser `backend` |
+| Render: o deploy termina, mas a página dá erro 502 | O servidor não subiu, ou não usa `process.env.PORT` | Leia o log; confira o `server.js` |
+| A API demora cerca de um minuto no primeiro acesso | Serviço grátis suspenso por inatividade | É o esperado; aguarde |
+| Os dados que criei ontem sumiram | Disco efêmero do plano grátis | É o esperado; por isso os dados de exemplo |
+| Console: `blocked by CORS policy` em produção | `CORS_ORIGIN` ausente ou diferente da URL do front | Copie a URL da Vercel, com `https://` e **sem** barra no final |
+| Console: `Mixed Content` | O front (https) chama a API por `http://` | No `config.js`, a URL da API começa com `https://` |
+| Em produção, o front tenta `localhost:3000` | O `config.js` antigo foi publicado | Confira o commit e o push; veja o deploy mais recente na Vercel |
+| Vercel: página 404 | Root Directory errado | Tem de ser `frontend` (onde está o `index.html`) |
+| `.env` apareceu no GitHub | Faltou no `.gitignore` | `git rm --cached backend/.env`, acrescente ao `.gitignore`, commit |
+| Localmente, `--env-file-if-exists` não é reconhecido | Node anterior ao 22.9 | Atualize o Node, ou use `--env-file=.env` (exige que o arquivo exista) |
 
 ---
 
-# Plano B: better-sqlite3
+## Para ir além (não é exigido)
 
-Só para quem não consegue ter o Node 22. A API é quase idêntica.
-
-```bash
-npm install better-sqlite3
-```
-
-No `db.js`, troque as três primeiras instruções:
-
-```javascript
-import Database from 'better-sqlite3';
-
-const arquivo = process.env.DB_FILE ?? 'banco.db';
-export const db = new Database(arquivo);
-db.pragma('foreign_keys = ON');
-// db.exec(...) e db.prepare(...).all() / .get() / .run() continuam iguais
-```
-
-Atenção: no deploy, o `better-sqlite3` precisa ser compilado na instalação. Se possível, atualize o Node e use o módulo nativo.
-
----
-
-# Código completo da Parte A
-
-Os arquivos que mudaram na `s3/banco-api`. Todo o resto está como na S4. O projeto inteiro está no `S5_banco-api-sqlite.zip`.
-
-`src/db.js`:
-
-```javascript
-import { DatabaseSync } from 'node:sqlite';
-
-// O banco inteiro é um arquivo. Se não existir, o SQLite cria.
-const arquivo = process.env.DB_FILE ?? 'banco.db';
-export const db = new DatabaseSync(arquivo);
-
-// No SQLite a checagem de chave estrangeira vem desligada.
-// Tem de ligar a cada conexão.
-db.exec('PRAGMA foreign_keys = ON;');
-
-// O schema. IF NOT EXISTS: este arquivo roda toda vez que o servidor sobe.
-db.exec(`
-  CREATE TABLE IF NOT EXISTS clientes (
-    id    INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome  TEXT NOT NULL,
-    cpf   TEXT NOT NULL UNIQUE,
-    email TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS contas (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    tipo       TEXT NOT NULL CHECK (tipo IN ('corrente', 'poupanca')),
-    saldo      REAL NOT NULL,
-    cliente_id INTEGER NOT NULL REFERENCES clientes(id),
-    criada_em  TEXT NOT NULL
-  );
-`);
-```
-
-`src/models/clienteModel.js`:
-
-```javascript
-import { db } from '../db.js';
-
-// Mesmo contrato da S3 (listar, buscarPorId, existeCpf, inserir,
-// atualizar, remover). Só o "como" mudou: o array virou tabela.
-export const clienteModel = {
-  listar() {
-    return db.prepare('SELECT * FROM clientes ORDER BY id').all();
-  },
-
-  buscarPorId(id) {
-    return db.prepare('SELECT * FROM clientes WHERE id = ?').get(id) ?? null;
-  },
-
-  existeCpf(cpf) {
-    const linha = db.prepare('SELECT 1 FROM clientes WHERE cpf = ?').get(cpf);
-    return linha !== undefined;
-  },
-
-  inserir({ nome, cpf, email }) {
-    const r = db
-      .prepare('INSERT INTO clientes (nome, cpf, email) VALUES (?, ?, ?)')
-      .run(nome, cpf, email ?? null);
-    return this.buscarPorId(r.lastInsertRowid);
-  },
-
-  atualizar(id, dados) {
-    const atual = this.buscarPorId(id);
-    if (!atual) return null;
-    const novo = { ...atual, ...dados };
-    db.prepare('UPDATE clientes SET nome = ?, cpf = ?, email = ? WHERE id = ?')
-      .run(novo.nome, novo.cpf, novo.email ?? null, id); // o id nunca muda
-    return this.buscarPorId(id);
-  },
-
-  remover(id) {
-    const r = db.prepare('DELETE FROM clientes WHERE id = ?').run(id);
-    return r.changes > 0; // true = removeu
-  },
-};
-```
-
-`src/models/contaModel.js`:
-
-```javascript
-import { db } from '../db.js';
-
-// No banco: snake_case (cliente_id). No JSON da API: camelCase (clienteId).
-// O AS traduz aqui, na única camada que conhece o banco.
-const COLUNAS = `id, tipo, saldo,
-  cliente_id AS clienteId, criada_em AS criadaEm`;
-
-export const contaModel = {
-  listar() {
-    return db.prepare(`SELECT ${COLUNAS} FROM contas ORDER BY id`).all();
-  },
-
-  listarPorCliente(clienteId) {
-    return db
-      .prepare(`SELECT ${COLUNAS} FROM contas WHERE cliente_id = ? ORDER BY id`)
-      .all(clienteId);
-  },
-
-  buscarPorId(id) {
-    return db
-      .prepare(`SELECT ${COLUNAS} FROM contas WHERE id = ?`)
-      .get(id) ?? null;
-  },
-
-  inserir({ tipo, saldo, clienteId }) {
-    const r = db
-      .prepare(`INSERT INTO contas (tipo, saldo, cliente_id, criada_em)
-                VALUES (?, ?, ?, ?)`)
-      .run(tipo, Number(saldo), Number(clienteId), new Date().toISOString());
-    return this.buscarPorId(r.lastInsertRowid);
-  },
-
-  atualizar(id, dados) {
-    const atual = this.buscarPorId(id);
-    if (!atual) return null;
-    const novo = { ...atual, ...dados };
-    db.prepare('UPDATE contas SET tipo = ?, saldo = ?, cliente_id = ? WHERE id = ?')
-      .run(novo.tipo, Number(novo.saldo), Number(novo.clienteId), id);
-    return this.buscarPorId(id);
-  },
-
-  remover(id) {
-    const r = db.prepare('DELETE FROM contas WHERE id = ?').run(id);
-    return r.changes > 0;
-  },
-};
-```
-
-`src/services/clienteService.js`:
-
-```javascript
-import { clienteModel } from '../models/clienteModel.js';
-import { contaModel } from '../models/contaModel.js';
-import { erro } from '../utils/erro.js';
-
-export const clienteService = {
-  listar() {
-    return clienteModel.listar();
-  },
-
-  buscarPorId(id) {
-    const cliente = clienteModel.buscarPorId(id);
-    if (!cliente) throw erro(404, 'Cliente não encontrado');
-    return cliente;
-  },
-
-  criar({ nome, cpf, email } = {}) {
-    // Regra 1: nome e cpf são obrigatórios
-    if (!nome || !cpf) throw erro(400, 'Campos "nome" e "cpf" são obrigatórios');
-    // Regra 2: cpf é único
-    if (clienteModel.existeCpf(cpf)) throw erro(409, 'Já existe um cliente com este CPF');
-    return clienteModel.inserir({ nome, cpf, email });
-  },
-
-  atualizar(id, dados = {}) {
-    const atualizado = clienteModel.atualizar(id, dados);
-    if (!atualizado) throw erro(404, 'Cliente não encontrado');
-    return atualizado;
-  },
-
-  remover(id) {
-    // Regra nova (S5): cliente com contas não pode ser removido
-    if (contaModel.listarPorCliente(id).length > 0) {
-      throw erro(409, 'Cliente possui contas. Remova as contas primeiro.');
-    }
-    const removido = clienteModel.remover(id);
-    if (!removido) throw erro(404, 'Cliente não encontrado');
-  },
-};
-```
-
-`.gitignore`:
-
-```
-node_modules/
-.env
-banco.db
-```
-
-## Extra: a conta com o nome do dono (JOIN)
-
-O slide 17 mostrou o `JOIN`. Se quiser experimentar, acrescente ao `contaModel`:
-
-```javascript
-  listarComDono() {
-    return db.prepare(`
-      SELECT contas.id, contas.tipo, contas.saldo,
-             clientes.nome AS dono
-      FROM contas
-      JOIN clientes ON clientes.id = contas.cliente_id
-    `).all();
-  },
-```
-
-Para usar na API, o caminho é o de sempre: um método no service, um no controller e uma rota (por exemplo, `GET /contas/com-dono`, registrada **antes** de `GET /contas/:id`).
-
----
+- **OpenAPI/Swagger:** descreva a sua API em um arquivo `openapi.yaml` e veja a documentação interativa em https://editor.swagger.io. É o "README que máquinas leem": https://learn.openapis.org
+- **PostgreSQL no lugar do SQLite em produção:** o Render oferece um banco gratuito por tempo limitado. A troca aconteceria só nos models; vamos retomar bancos em servidor na Trilha 3.
 
 ## Referências
 
-- Node.js — módulo `node:sqlite`: https://nodejs.org/api/sqlite.html
-- SQLite — *Appropriate Uses for SQLite*: https://sqlite.org/whentouse.html
-- SQLite — *Foreign Key Support*: https://sqlite.org/foreignkeys.html
-- SQLite — *Datatypes*: https://sqlite.org/datatype3.html
-- OWASP — *SQL Injection Prevention Cheat Sheet*: https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
-- Codd, E. F. (1970). *A Relational Model of Data for Large Shared Data Banks*. Communications of the ACM, 13(6), 377–387.
+- Render — *Deploy for Free* (limites do plano grátis): https://render.com/docs/free
+- Render — *Deploy a Node Express App*: https://render.com/docs/deploy-node-express-app
+- Vercel — *Project Configuration: Root Directory*: https://vercel.com/docs/deployments/configure-a-build
+- Node.js — *Environment variables* (`--env-file`): https://nodejs.org/api/environment_variables.html
+- Material PUC-Rio — aula "Documentação e Deploy"

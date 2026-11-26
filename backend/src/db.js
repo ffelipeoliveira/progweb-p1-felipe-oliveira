@@ -53,3 +53,16 @@ db.exec(`
     lucro REAL NOT NULL
   );
 `);
+
+// Dados de exemplo: só entram se o banco estiver vazio.
+// No Render grátis o arquivo some a cada reinício; assim a demo nunca abre vazia.
+const { total } = db.prepare('SELECT COUNT(*) AS total FROM modelos3d').get();
+if (total === 0) {
+  const r = db
+    .prepare('INSERT INTO modelos3d (peso, tamanho, tempo_de_impressao) VALUES (?, ?, ?)')
+    .run('4', '40x90x5 cm', '1500');
+  db.prepare(`INSERT INTO impressoes (modelo3d_id, custo, tamanho)
+              VALUES (?, ?, ?, ?)`)
+    .run(r.lastInsertRowid, 1, "40x90x5 cm");
+}
+
