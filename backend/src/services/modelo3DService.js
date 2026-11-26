@@ -1,4 +1,5 @@
 import { modelo3DModel } from '../models/modelo3DModel.js';
+import { impressaoModel } from '../models/impressaoModel.js';
 import { erro } from '../routes/erro.js';
 
 const camposEditaveis = ['peso', 'tamanho', 'tempoDeImpressao'];
@@ -82,7 +83,10 @@ export const modelo3DService = {
   },
 
   remover(id) {
-    const removido = modelo3DModel.remover(id);
-    if (!removido) throw erro(404, 'Modelo 3D não encontrado');
+    if (!modelo3DModel.buscarPorId(id)) throw erro(404, 'Modelo 3D não encontrado');
+    if (impressaoModel.listar().some((impressao) => impressao.modelo3DId === id)) {
+      throw erro(409, 'Não é possível remover um modelo 3D associado a impressões');
+    }
+    modelo3DModel.remover(id);
   },
 };

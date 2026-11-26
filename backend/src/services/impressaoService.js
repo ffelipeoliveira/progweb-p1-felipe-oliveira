@@ -1,7 +1,8 @@
 import { impressaoModel } from '../models/impressaoModel.js';
+import { modelo3DModel } from '../models/modelo3DModel.js';
 import { erro } from '../routes/erro.js';
 
-const camposEditaveis = ['custo', 'tamanho'];
+const camposEditaveis = ['modelo3DId', 'custo', 'tamanho'];
 
 function validarTamanho(tamanho) {
   if (typeof tamanho === 'number') {
@@ -20,9 +21,15 @@ function validarTamanho(tamanho) {
   }
 }
 
-function validarImpressao({ custo, tamanho }) {
-  if (custo == null || tamanho == null) {
-    throw erro(400, 'Campos "custo" e "tamanho" são obrigatórios');
+function validarImpressao({ modelo3DId, custo, tamanho }) {
+  if (modelo3DId == null || custo == null || tamanho == null) {
+    throw erro(400, 'Campos "modelo3DId", "custo" e "tamanho" são obrigatórios');
+  }
+  if (!Number.isInteger(modelo3DId) || modelo3DId <= 0) {
+    throw erro(400, 'O modelo 3D informado é inválido');
+  }
+  if (!modelo3DModel.buscarPorId(modelo3DId)) {
+    throw erro(404, 'Modelo 3D não encontrado');
   }
   if (typeof custo !== 'number' || !Number.isFinite(custo) || custo < 0) {
     throw erro(400, 'O custo deve ser um número maior ou igual a zero');
@@ -51,8 +58,8 @@ export const impressaoService = {
       throw erro(400, 'Os dados da impressão devem ser um objeto');
     }
     validarCamposEditaveis(dados);
-    const { custo, tamanho } = dados;
-    const dadosImpressao = { custo, tamanho };
+    const { modelo3DId, custo, tamanho } = dados;
+    const dadosImpressao = { modelo3DId, custo, tamanho };
     validarImpressao(dadosImpressao);
     return impressaoModel.inserir(dadosImpressao);
   },
