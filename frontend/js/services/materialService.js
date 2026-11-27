@@ -1,25 +1,16 @@
 import { api } from '../api.js';
 
-function preparar({ tipo, marca, preco, qtdEmGramas }) {
-  const precoTexto = String(preco ?? '').trim();
-  const quantidadeTexto = String(qtdEmGramas ?? '').trim();
+function preparar({ tipo, marca, precoPorKg }) {
+  const precoTexto = String(precoPorKg ?? '').trim();
   const dados = {
     tipo: String(tipo ?? '').trim(),
     marca: String(marca ?? '').trim(),
-    preco: Number(precoTexto),
-    qtdEmGramas: Number(quantidadeTexto),
+    precoPorKg: Number(precoTexto),
   };
 
   if (!dados.tipo || !dados.marca) throw new Error('Informe o tipo e a marca do material.');
-  if (!precoTexto || !Number.isFinite(dados.preco) || dados.preco < 0) {
-    throw new Error('Informe um preço válido, maior ou igual a zero.');
-  }
-  if (
-    !quantidadeTexto ||
-    !Number.isFinite(dados.qtdEmGramas) ||
-    dados.qtdEmGramas <= 0
-  ) {
-    throw new Error('Informe uma quantidade em gramas maior que zero.');
+  if (!precoTexto || !Number.isFinite(dados.precoPorKg) || dados.precoPorKg < 0) {
+    throw new Error('Informe um preço por kg válido, maior ou igual a zero.');
   }
   return dados;
 }

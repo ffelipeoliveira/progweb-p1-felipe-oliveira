@@ -2,15 +2,9 @@ import { criarStore } from './js/state/store.js';
 import { impressaoService } from './js/services/impressaoService.js';
 import { modelo3DService } from './js/services/modelo3DService.js';
 import { materialService } from './js/services/materialService.js';
-import { impressoraService } from './js/services/impressoraService.js';
-import { embalagemService } from './js/services/embalagemService.js';
-import { vendaService } from './js/services/vendaService.js';
 import { impressaoView } from './js/ui/impressaoView.js';
 import { modelo3DView } from './js/ui/modelo3DView.js';
 import { materialView } from './js/ui/materialView.js';
-import { impressoraView } from './js/ui/impressoraView.js';
-import { embalagemView } from './js/ui/embalagemView.js';
-import { vendaView } from './js/ui/vendaView.js';
 import { aviso } from './js/ui/aviso.js';
 
 const modelos = criarStore({
@@ -25,6 +19,7 @@ const impressoes = criarStore({
   status: 'carregando',
   impressoes: [],
   modelos: [],
+  materiais: [],
   erro: null,
   editandoId: null,
   salvando: false,
@@ -32,6 +27,17 @@ const impressoes = criarStore({
 
 modelos.assinar(modelo3DView.render);
 impressoes.assinar(impressaoView.render);
+
+async function carregarMateriaisParaImpressoes() {
+  try {
+    const lista = await materialService.listar();
+    impressoes.set({ materiais: lista });
+    impressaoView.preencherMateriais(lista);
+  } catch (e) {
+    impressoes.set({ materiais: [] });
+    impressaoView.preencherMateriais([]);
+  }
+}
 
 async function carregarModelos() {
   modelos.set({ status: 'carregando', erro: null });
@@ -249,36 +255,6 @@ iniciarCrud({
     removido: 'Material removido.',
   },
 });
-iniciarCrud({
-  service: impressoraService,
-  view: impressoraView,
-  mensagens: {
-    artigo: 'a impressora',
-    cadastrado: 'Impressora cadastrada.',
-    atualizado: 'Impressora atualizada.',
-    removido: 'Impressora removida.',
-  },
-});
-iniciarCrud({
-  service: embalagemService,
-  view: embalagemView,
-  mensagens: {
-    artigo: 'a embalagem',
-    cadastrado: 'Embalagem cadastrada.',
-    atualizado: 'Embalagem atualizada.',
-    removido: 'Embalagem removida.',
-  },
-});
-iniciarCrud({
-  service: vendaService,
-  view: vendaView,
-  mensagens: {
-    artigo: 'a venda',
-    cadastrado: 'Venda cadastrada.',
-    atualizado: 'Venda atualizada.',
-    removido: 'Venda removida.',
-  },
-});
-
 carregarModelos();
 carregarImpressoes();
+carregarMateriaisParaImpressoes();

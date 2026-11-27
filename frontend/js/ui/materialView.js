@@ -10,16 +10,11 @@ export const materialView = criarCrudView({
   campos: [
     { nome: 'tipo' },
     { nome: 'marca' },
-    { nome: 'preco' },
-    { nome: 'qtdEmGramas' },
+    { nome: 'precoPorKg' },
   ],
   colunas: [
     { valor: (material) => material.tipo },
     { valor: (material) => material.marca },
-    { valor: (material) => moeda.format(material.preco), classe: 'numero text-nowrap' },
-    {
-      valor: (material) => `${material.qtdEmGramas} g`,
-      classe: 'numero text-nowrap',
-    },
+    { valor: (material) => moeda.format(material.precoPorKg), classe: 'numero text-nowrap' },
   ],
 });

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Impressões 3D · Painel</title>
-  <!-- Bootstrap 5.3.8 via CDN, com SRI: o navegador confere o hash do arquivo -->
   <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
     integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
@@ -15,7 +14,7 @@
   <header class="bg-primary text-white py-3 mb-4">
     <div class="container">
       <h1 class="h3 mb-0">Impressões 3D</h1>
-      <p class="mb-0 small">Gerencie modelos, impressões, materiais, impressoras, embalagens e vendas.</p>
+      <p class="mb-0 small">Gerencie modelos, impressões e materiais.</p>
     </div>
   </header>
 
@@ -24,184 +23,57 @@
       <a class="btn btn-outline-primary btn-sm" href="#modelos">Modelos 3D</a>
       <a class="btn btn-outline-primary btn-sm" href="#impressoes">Impressões</a>
       <a class="btn btn-outline-primary btn-sm" href="#materiais">Materiais</a>
-      <a class="btn btn-outline-primary btn-sm" href="#impressoras">Impressoras</a>
-      <a class="btn btn-outline-primary btn-sm" href="#embalagens">Embalagens</a>
-      <a class="btn btn-outline-primary btn-sm" href="#vendas">Vendas</a>
     </div>
   </nav>
 
   <main class="container">
-    <!-- Resultado das ações (criar, editar, remover) -->
     <div id="aviso" class="alert d-none" role="status" aria-live="polite"></div>
 
     <section id="modelos" class="row g-4 mb-5" aria-labelledby="titulo-modelo">
       <div class="col-lg-4">
         <div class="card shadow-sm">
-          <div class="card-header">
-            <h2 id="titulo-modelo" class="h5 mb-0">Cadastrar modelo 3D</h2>
-          </div>
+          <div class="card-header"><h2 id="titulo-modelo" class="h5 mb-0">Cadastrar modelo 3D</h2></div>
           <form id="form-modelo" class="card-body">
             <div class="mb-3">
               <label for="mod-peso" class="form-label">Peso (g)</label>
-              <input id="mod-peso" name="peso" type="number" class="form-control"
-                min="0.01" step="0.01" required>
+              <input id="mod-peso" name="peso" type="number" class="form-control" min="0.01" step="0.01" required>
             </div>
             <div class="mb-3">
               <label for="mod-tamanho" class="form-label">Tamanho</label>
-              <input id="mod-tamanho" name="tamanho" type="text" class="form-control"
-                placeholder="Ex.: 10 × 10 × 10 cm" required>
-            </div>
-            <div class="mb-3">
-              <label for="mod-tempo" class="form-label">Tempo de impressão (segundos)</label>
-              <input id="mod-tempo" name="tempoDeImpressao" type="number"
-                class="form-control" min="0" step="1" required>
+              <input id="mod-tamanho" name="tamanho" type="text" class="form-control" placeholder="Ex.: 10 × 10 × 10 cm" required>
             </div>
             <div class="d-flex gap-2">
-              <button id="mod-salvar" type="submit" class="btn btn-primary">
-                Cadastrar modelo
-              </button>
-              <button id="mod-cancelar" type="button"
-                class="btn btn-outline-secondary d-none">
-                Cancelar
-              </button>
+              <button id="mod-salvar" type="submit" class="btn btn-primary">Cadastrar modelo</button>
+              <button id="mod-cancelar" type="button" class="btn btn-outline-secondary d-none">Cancelar</button>
             </div>
           </form>
         </div>
       </div>
-
       <div class="col-lg-8">
         <div class="row g-3 mb-3">
-          <div class="col-sm-6">
-            <div class="card shadow-sm h-100">
-              <div class="card-body">
-                <h2 class="h6 text-muted">Modelos 3D cadastrados</h2>
-                <p id="modelos-total" class="h3 mb-0">0</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="card shadow-sm h-100">
-              <div class="card-body">
-                <h2 class="h6 text-muted">Impressões registradas</h2>
-                <p id="impressoes-total" class="h3 mb-0">0</p>
-              </div>
-            </div>
-          </div>
+          <div class="col-sm-6"><div class="card shadow-sm h-100"><div class="card-body">
+            <h2 class="h6 text-muted">Modelos 3D cadastrados</h2><p id="modelos-total" class="h3 mb-0">0</p>
+          </div></div></div>
+          <div class="col-sm-6"><div class="card shadow-sm h-100"><div class="card-body">
+            <h2 class="h6 text-muted">Impressões registradas</h2><p id="impressoes-total" class="h3 mb-0">0</p>
+          </div></div></div>
         </div>
-
         <div class="card shadow-sm">
-          <div class="card-header">
-            <h2 class="h5 mb-0">Modelos 3D</h2>
-          </div>
+          <div class="card-header"><h2 class="h5 mb-0">Modelos 3D</h2></div>
           <div class="card-body">
             <div id="modelos-carregando" class="text-center py-4">
               <div class="spinner-border text-primary" aria-hidden="true"></div>
               <p class="text-muted mt-2 mb-0">Carregando modelos…</p>
             </div>
-
             <div id="modelos-erro" class="alert alert-danger mb-0 d-none" role="alert">
               <p id="modelos-erro-msg" class="mb-2"></p>
-              <button id="modelos-recarregar" type="button"
-                class="btn btn-sm btn-outline-danger">Tentar de novo</button>
+              <button id="modelos-recarregar" type="button" class="btn btn-sm btn-outline-danger">Tentar de novo</button>
             </div>
-
-            <p id="modelos-vazio" class="text-muted text-center py-4 mb-0 d-none">
-              Nenhum modelo cadastrado. Use o formulário para adicionar o primeiro.
-            </p>
-
+            <p id="modelos-vazio" class="text-muted text-center py-4 mb-0 d-none">Nenhum modelo cadastrado. Use o formulário para adicionar o primeiro.</p>
             <div id="modelos-sucesso" class="table-responsive d-none">
               <table class="table table-hover align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Tamanho</th>
-                    <th scope="col">Peso</th>
-                    <th scope="col">Tempo</th>
-                    <th scope="col" class="text-end">Ações</th>
-                  </tr>
-                </thead>
+                <thead><tr><th>#</th><th>Tamanho</th><th>Peso</th><th class="text-end">Ações</th></tr></thead>
                 <tbody id="modelos-linhas"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="impressoes" class="row g-4 mb-5" aria-labelledby="titulo-impressao">
-      <div class="col-lg-4">
-        <div class="card shadow-sm">
-          <div class="card-header">
-            <h2 id="titulo-impressao" class="h5 mb-0">Registrar impressão</h2>
-          </div>
-          <form id="form-impressao" class="card-body">
-            <div class="mb-3">
-              <label for="imp-modelo" class="form-label">Modelo 3D</label>
-              <select id="imp-modelo" name="modelo3DId" class="form-select" required>
-                <option value="">Carregando modelos…</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="imp-tamanho" class="form-label">Tamanho da impressão</label>
-              <input id="imp-tamanho" name="tamanho" type="text" class="form-control"
-                placeholder="Ex.: 10 × 10 × 10 cm" required>
-            </div>
-            <div class="mb-3">
-              <label for="imp-custo" class="form-label">Custo (R$)</label>
-              <input id="imp-custo" name="custo" type="number" class="form-control"
-                min="0" step="0.01" placeholder="0,00" required>
-            </div>
-            <div class="d-flex gap-2">
-              <button id="imp-salvar" type="submit" class="btn btn-primary">
-                Registrar impressão
-              </button>
-              <button id="imp-cancelar" type="button"
-                class="btn btn-outline-secondary d-none">Cancelar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div class="col-lg-8">
-        <div class="row g-3 mb-3">
-          <div class="col-sm-6">
-            <div class="card shadow-sm h-100">
-              <div class="card-body">
-                <h2 class="h6 text-muted">Custo total registrado</h2>
-                <p id="impressoes-custo-total" class="h3 mb-0">R$ 0,00</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card shadow-sm">
-          <div class="card-header">
-            <h2 class="h5 mb-0">Impressões</h2>
-          </div>
-          <div class="card-body">
-            <div id="impressoes-carregando" class="text-center py-4">
-              <div class="spinner-border text-primary" aria-hidden="true"></div>
-              <p class="text-muted mt-2 mb-0">Carregando impressões…</p>
-            </div>
-            <div id="impressoes-erro" class="alert alert-danger mb-0 d-none" role="alert">
-              <p id="impressoes-erro-msg" class="mb-2"></p>
-              <button id="impressoes-recarregar" type="button"
-                class="btn btn-sm btn-outline-danger">Tentar de novo</button>
-            </div>
-            <p id="impressoes-vazio" class="text-muted text-center py-4 mb-0 d-none">
-              Nenhuma impressão registrada. Cadastre um modelo e registre a primeira.
-            </p>
-            <div id="impressoes-sucesso" class="table-responsive d-none">
-              <table class="table table-hover align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Modelo 3D</th>
-                    <th scope="col">Tamanho</th>
-                    <th scope="col">Custo</th>
-                    <th scope="col" class="text-end">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="impressoes-linhas"></tbody>
               </table>
             </div>
           </div>
@@ -212,9 +84,7 @@
     <section id="materiais" class="row g-4 mb-5" aria-labelledby="titulo-materiais">
       <div class="col-lg-4">
         <div class="card shadow-sm">
-          <div class="card-header">
-            <h2 id="titulo-materiais" class="h5 mb-0">Cadastrar material</h2>
-          </div>
+          <div class="card-header"><h2 id="titulo-materiais" class="h5 mb-0">Cadastrar material</h2></div>
           <form id="mat-form" class="card-body">
             <div class="mb-3">
               <label for="mat-tipo" class="form-label">Tipo</label>
@@ -225,19 +95,12 @@
               <input id="mat-marca" name="marca" type="text" class="form-control" required>
             </div>
             <div class="mb-3">
-              <label for="mat-preco" class="form-label">Preço (R$)</label>
-              <input id="mat-preco" name="preco" type="number" class="form-control"
-                min="0" step="0.01" required>
-            </div>
-            <div class="mb-3">
-              <label for="mat-quantidade" class="form-label">Quantidade (g)</label>
-              <input id="mat-quantidade" name="qtdEmGramas" type="number" class="form-control"
-                min="0.01" step="0.01" required>
+              <label for="mat-precoPorKg" class="form-label">Preço por kg (R$)</label>
+              <input id="mat-precoPorKg" name="precoPorKg" type="number" class="form-control" min="0" step="0.01" required>
             </div>
             <div class="d-flex gap-2">
               <button id="mat-salvar" type="submit" class="btn btn-primary">Cadastrar</button>
-              <button id="mat-cancelar" type="button"
-                class="btn btn-outline-secondary d-none">Cancelar</button>
+              <button id="mat-cancelar" type="button" class="btn btn-outline-secondary d-none">Cancelar</button>
             </div>
           </form>
         </div>
@@ -245,8 +108,7 @@
       <div class="col-lg-8">
         <div class="card shadow-sm">
           <div class="card-header d-flex justify-content-between align-items-center">
-            <h2 class="h5 mb-0">Materiais</h2>
-            <span class="text-muted small">Cadastrados: <strong id="mat-total">0</strong></span>
+            <h2 class="h5 mb-0">Materiais</h2><span class="text-muted small">Cadastrados: <strong id="mat-total">0</strong></span>
           </div>
           <div class="card-body">
             <div id="mat-carregando" class="text-center py-4">
@@ -255,24 +117,12 @@
             </div>
             <div id="mat-erro" class="alert alert-danger mb-0 d-none" role="alert">
               <p id="mat-erro-msg" class="mb-2"></p>
-              <button id="mat-recarregar" type="button"
-                class="btn btn-sm btn-outline-danger">Tentar de novo</button>
+              <button id="mat-recarregar" type="button" class="btn btn-sm btn-outline-danger">Tentar de novo</button>
             </div>
-            <p id="mat-vazio" class="text-muted text-center py-4 mb-0 d-none">
-              Nenhum material cadastrado. Use o formulário para adicionar o primeiro.
-            </p>
+            <p id="mat-vazio" class="text-muted text-center py-4 mb-0 d-none">Nenhum material cadastrado. Use o formulário para adicionar o primeiro.</p>
             <div id="mat-sucesso" class="table-responsive d-none">
               <table class="table table-hover align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Tipo</th>
-                    <th scope="col">Marca</th>
-                    <th scope="col">Preço</th>
-                    <th scope="col">Quantidade</th>
-                    <th scope="col" class="text-end">Ações</th>
-                  </tr>
-                </thead>
+                <thead><tr><th>#</th><th>Tipo</th><th>Marca</th><th>Preço por kg</th><th class="text-end">Ações</th></tr></thead>
                 <tbody id="mat-linhas"></tbody>
               </table>
             </div>
@@ -281,211 +131,58 @@
       </div>
     </section>
 
-    <section id="impressoras" class="row g-4 mb-5" aria-labelledby="titulo-impressoras">
+    <section id="impressoes" class="row g-4 mb-5" aria-labelledby="titulo-impressao">
       <div class="col-lg-4">
         <div class="card shadow-sm">
-          <div class="card-header">
-            <h2 id="titulo-impressoras" class="h5 mb-0">Cadastrar impressora</h2>
-          </div>
-          <form id="impr-form" class="card-body">
+          <div class="card-header"><h2 id="titulo-impressao" class="h5 mb-0">Registrar impressão</h2></div>
+          <form id="form-impressao" class="card-body">
             <div class="mb-3">
-              <label for="impr-modelo" class="form-label">Modelo</label>
-              <input id="impr-modelo" name="modelo" type="text" class="form-control" required>
+              <label for="imp-modelo" class="form-label">Modelo 3D</label>
+              <select id="imp-modelo" name="modelo3DId" class="form-select" required><option value="">Carregando modelos…</option></select>
             </div>
             <div class="mb-3">
-              <label for="impr-marca" class="form-label">Marca</label>
-              <input id="impr-marca" name="marca" type="text" class="form-control" required>
+              <label for="imp-material" class="form-label">Material</label>
+              <select id="imp-material" name="materialId" class="form-select" required><option value="">Carregando materiais…</option></select>
             </div>
             <div class="mb-3">
-              <label for="impr-area" class="form-label">Área de impressão</label>
-              <input id="impr-area" name="areaDeImpressao" type="text" class="form-control"
-                placeholder="Ex.: 220 × 220 × 250 mm" required>
+              <label for="imp-tamanho" class="form-label">Tamanho da impressão</label>
+              <input id="imp-tamanho" name="tamanho" type="text" class="form-control" placeholder="Ex.: 10 × 10 × 10 cm" required>
             </div>
             <div class="d-flex gap-2">
-              <button id="impr-salvar" type="submit" class="btn btn-primary">Cadastrar</button>
-              <button id="impr-cancelar" type="button"
-                class="btn btn-outline-secondary d-none">Cancelar</button>
+              <button id="imp-salvar" type="submit" class="btn btn-primary">Registrar impressão</button>
+              <button id="imp-cancelar" type="button" class="btn btn-outline-secondary d-none">Cancelar</button>
             </div>
           </form>
         </div>
       </div>
       <div class="col-lg-8">
+        <div class="row g-3 mb-3"><div class="col-sm-6"><div class="card shadow-sm h-100"><div class="card-body">
+          <h2 class="h6 text-muted">Custo total registrado</h2><p id="impressoes-custo-total" class="h3 mb-0">R$ 0,00</p>
+        </div></div></div></div>
         <div class="card shadow-sm">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h2 class="h5 mb-0">Impressoras</h2>
-            <span class="text-muted small">Cadastradas: <strong id="impr-total">0</strong></span>
-          </div>
+          <div class="card-header"><h2 class="h5 mb-0">Impressões</h2></div>
           <div class="card-body">
-            <div id="impr-carregando" class="text-center py-4">
+            <div id="impressoes-carregando" class="text-center py-4">
               <div class="spinner-border text-primary" aria-hidden="true"></div>
-              <p class="text-muted mt-2 mb-0">Carregando impressoras…</p>
+              <p class="text-muted mt-2 mb-0">Carregando impressões…</p>
             </div>
-            <div id="impr-erro" class="alert alert-danger mb-0 d-none" role="alert">
-              <p id="impr-erro-msg" class="mb-2"></p>
-              <button id="impr-recarregar" type="button"
-                class="btn btn-sm btn-outline-danger">Tentar de novo</button>
+            <div id="impressoes-erro" class="alert alert-danger mb-0 d-none" role="alert">
+              <p id="impressoes-erro-msg" class="mb-2"></p>
+              <button id="impressoes-recarregar" type="button" class="btn btn-sm btn-outline-danger">Tentar de novo</button>
             </div>
-            <p id="impr-vazio" class="text-muted text-center py-4 mb-0 d-none">
-              Nenhuma impressora cadastrada. Use o formulário para adicionar a primeira.
-            </p>
-            <div id="impr-sucesso" class="table-responsive d-none">
+            <p id="impressoes-vazio" class="text-muted text-center py-4 mb-0 d-none">Nenhuma impressão registrada. Cadastre um modelo e registre a primeira.</p>
+            <div id="impressoes-sucesso" class="table-responsive d-none">
               <table class="table table-hover align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Modelo</th>
-                    <th scope="col">Marca</th>
-                    <th scope="col">Área de impressão</th>
-                    <th scope="col" class="text-end">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="impr-linhas"></tbody>
+                <thead><tr><th>#</th><th>Modelo 3D</th><th>Material</th><th>Tamanho</th><th>Custo</th><th class="text-end">Ações</th></tr></thead>
+                <tbody id="impressoes-linhas"></tbody>
               </table>
             </div>
           </div>
         </div>
       </div>
     </section>
-
-    <section id="embalagens" class="row g-4 mb-5" aria-labelledby="titulo-embalagens">
-      <div class="col-lg-4">
-        <div class="card shadow-sm">
-          <div class="card-header">
-            <h2 id="titulo-embalagens" class="h5 mb-0">Cadastrar embalagem</h2>
-          </div>
-          <form id="emb-form" class="card-body">
-            <div class="mb-3">
-              <label for="emb-custo" class="form-label">Custo (R$)</label>
-              <input id="emb-custo" name="custo" type="number" class="form-control"
-                min="0" step="0.01" required>
-            </div>
-            <div class="mb-3">
-              <label for="emb-tamanho" class="form-label">Tamanho</label>
-              <input id="emb-tamanho" name="tamanho" type="text" class="form-control"
-                placeholder="Ex.: 20 × 20 × 10 cm" required>
-            </div>
-            <div class="mb-3">
-              <label for="emb-opcionais" class="form-label">Opcionais</label>
-              <input id="emb-opcionais" name="opcionais" type="text" class="form-control"
-                placeholder="Separados por vírgula">
-            </div>
-            <div class="d-flex gap-2">
-              <button id="emb-salvar" type="submit" class="btn btn-primary">Cadastrar</button>
-              <button id="emb-cancelar" type="button"
-                class="btn btn-outline-secondary d-none">Cancelar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-      <div class="col-lg-8">
-        <div class="card shadow-sm">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h2 class="h5 mb-0">Embalagens</h2>
-            <span class="text-muted small">Cadastradas: <strong id="emb-total">0</strong></span>
-          </div>
-          <div class="card-body">
-            <div id="emb-carregando" class="text-center py-4">
-              <div class="spinner-border text-primary" aria-hidden="true"></div>
-              <p class="text-muted mt-2 mb-0">Carregando embalagens…</p>
-            </div>
-            <div id="emb-erro" class="alert alert-danger mb-0 d-none" role="alert">
-              <p id="emb-erro-msg" class="mb-2"></p>
-              <button id="emb-recarregar" type="button"
-                class="btn btn-sm btn-outline-danger">Tentar de novo</button>
-            </div>
-            <p id="emb-vazio" class="text-muted text-center py-4 mb-0 d-none">
-              Nenhuma embalagem cadastrada. Use o formulário para adicionar a primeira.
-            </p>
-            <div id="emb-sucesso" class="table-responsive d-none">
-              <table class="table table-hover align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Tamanho</th>
-                    <th scope="col">Custo</th>
-                    <th scope="col">Opcionais</th>
-                    <th scope="col" class="text-end">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="emb-linhas"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="vendas" class="row g-4 mb-5" aria-labelledby="titulo-vendas">
-      <div class="col-lg-4">
-        <div class="card shadow-sm">
-          <div class="card-header">
-            <h2 id="titulo-vendas" class="h5 mb-0">Registrar venda</h2>
-          </div>
-          <form id="ven-form" class="card-body">
-            <div class="mb-3">
-              <label for="ven-preco" class="form-label">Preço de venda (R$)</label>
-              <input id="ven-preco" name="preco" type="number" class="form-control"
-                min="0" step="0.01" required>
-            </div>
-            <div class="mb-3">
-              <label for="ven-custo" class="form-label">Custo (R$)</label>
-              <input id="ven-custo" name="custo" type="number" class="form-control"
-                min="0" step="0.01" required>
-              <div class="form-text">O lucro é calculado automaticamente.</div>
-            </div>
-            <div class="d-flex gap-2">
-              <button id="ven-salvar" type="submit" class="btn btn-primary">Cadastrar</button>
-              <button id="ven-cancelar" type="button"
-                class="btn btn-outline-secondary d-none">Cancelar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-      <div class="col-lg-8">
-        <div class="card shadow-sm">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h2 class="h5 mb-0">Vendas</h2>
-            <span class="text-muted small">Registradas: <strong id="ven-total">0</strong></span>
-          </div>
-          <div class="card-body">
-            <div id="ven-carregando" class="text-center py-4">
-              <div class="spinner-border text-primary" aria-hidden="true"></div>
-              <p class="text-muted mt-2 mb-0">Carregando vendas…</p>
-            </div>
-            <div id="ven-erro" class="alert alert-danger mb-0 d-none" role="alert">
-              <p id="ven-erro-msg" class="mb-2"></p>
-              <button id="ven-recarregar" type="button"
-                class="btn btn-sm btn-outline-danger">Tentar de novo</button>
-            </div>
-            <p id="ven-vazio" class="text-muted text-center py-4 mb-0 d-none">
-              Nenhuma venda registrada. Use o formulário para adicionar a primeira.
-            </p>
-            <div id="ven-sucesso" class="table-responsive d-none">
-              <table class="table table-hover align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Preço</th>
-                    <th scope="col">Custo</th>
-                    <th scope="col">Lucro</th>
-                    <th scope="col" class="text-end">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="ven-linhas"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
-
-  <footer class="container text-muted small pb-4">
-    Programação Web · UEPB · 2026.2
-  </footer>
-
-  <!-- type="module": habilita import/export e só roda depois de o HTML virar DOM -->
+  <footer class="container text-muted small pb-4">Programação Web · UEPB · 2026.2</footer>
   <script type="module" src="main.js"></script>
 </body>
 </html>

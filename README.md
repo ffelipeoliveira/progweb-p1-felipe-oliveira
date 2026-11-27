@@ -1,6 +1,6 @@
 # Regis3D Archiver
 
-Sistema de registro de impressões e vendas para gráficas 3D.  
+Sistema de registro de impressões e materiais para gráficas 3D.
 Projeto 1 da disciplina Programação Web (UEPB, 2026.2).
 
 - **Aplicação:** https://regis3darchiver.vercel.app
@@ -38,9 +38,6 @@ npx http-server -p 5500 -c-1     # http://localhost:5500
 | GET | /impressoes | Lista as impressões | 200 |
 | GET | /modelos | Lista os modelos 3D | 200 |
 | GET | /materiais | Lista os materiais e filamentos disponíveis | 200 |
-| GET | /impressoras | Lista impressoras 3D | 200 |
-| GET | /embalagens | Lista as embalagens | 200 |
-| GET | /vendas | Lista as vendas realizadas | 200 |
 | POST | /categorias | Cria uma categoria | 201, 400, 409 |
 | GET | /categorias/:id | Busca uma categoria | 200, 404 |
 | PUT | /categorias/:id | Atualiza uma categoria | 200, 404 |

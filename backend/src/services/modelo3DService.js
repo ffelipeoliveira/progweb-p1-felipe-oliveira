@@ -2,7 +2,7 @@ import { modelo3DModel } from '../models/modelo3DModel.js';
 import { impressaoModel } from '../models/impressaoModel.js';
 import { erro } from '../routes/erro.js';
 
-const camposEditaveis = ['peso', 'tamanho', 'tempoDeImpressao'];
+const camposEditaveis = ['peso', 'tamanho'];
 
 function validarTamanho(tamanho) {
   if (typeof tamanho === 'number') {
@@ -21,26 +21,14 @@ function validarTamanho(tamanho) {
   }
 }
 
-function validarModelo3D({ peso, tamanho, tempoDeImpressao }) {
-  if (
-    peso == null ||
-    tamanho == null ||
-    tempoDeImpressao == null ||
-    tempoDeImpressao === ''
-  ) {
-    throw erro(400, 'Campos "peso", "tamanho" e "tempoDeImpressao" são obrigatórios');
+function validarModelo3D({ peso, tamanho }) {
+  if (peso == null || tamanho == null) {
+    throw erro(400, 'Campos "peso" e "tamanho" são obrigatórios');
   }
   if (typeof peso !== 'number' || !Number.isFinite(peso) || peso <= 0) {
     throw erro(400, 'O peso deve ser um número maior que zero');
   }
   validarTamanho(tamanho);
-  if (
-    typeof tempoDeImpressao !== 'number' ||
-    !Number.isFinite(tempoDeImpressao) ||
-    tempoDeImpressao < 0
-  ) {
-    throw erro(400, 'O tempo de impressão deve ser um número maior ou igual a zero');
-  }
 }
 
 function validarCamposEditaveis(dados) {
@@ -64,8 +52,8 @@ export const modelo3DService = {
       throw erro(400, 'Os dados do modelo 3D devem ser um objeto');
     }
     validarCamposEditaveis(dados);
-    const { peso, tamanho, tempoDeImpressao } = dados;
-    const dadosModelo3D = { peso, tamanho, tempoDeImpressao };
+    const { peso, tamanho } = dados;
+    const dadosModelo3D = { peso, tamanho };
     validarModelo3D(dadosModelo3D);
     return modelo3DModel.inserir(dadosModelo3D);
   },

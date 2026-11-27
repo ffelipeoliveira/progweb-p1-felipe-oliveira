@@ -1,7 +1,7 @@
 import { materialModel } from '../models/materialModel.js';
 import { erro } from '../routes/erro.js';
 
-const camposEditaveis = ['tipo', 'marca', 'preco', 'qtdEmGramas'];
+const camposEditaveis = ['tipo', 'marca', 'precoPorKg', 'preco'];
 
 function validarTexto(valor, campo) {
   if (typeof valor !== 'string' || valor.trim() === '') {
@@ -9,18 +9,11 @@ function validarTexto(valor, campo) {
   }
 }
 
-function validarMaterial({ tipo, marca, preco, qtdEmGramas }) {
+function validarMaterial({ tipo, marca, precoPorKg }) {
   validarTexto(tipo, 'tipo');
   validarTexto(marca, 'marca');
-  if (typeof preco !== 'number' || !Number.isFinite(preco) || preco < 0) {
-    throw erro(400, 'O preço deve ser um número maior ou igual a zero');
-  }
-  if (
-    typeof qtdEmGramas !== 'number' ||
-    !Number.isFinite(qtdEmGramas) ||
-    qtdEmGramas <= 0
-  ) {
-    throw erro(400, 'A quantidade em gramas deve ser um número maior que zero');
+  if (typeof precoPorKg !== 'number' || !Number.isFinite(precoPorKg) || precoPorKg < 0) {
+    throw erro(400, 'O preço por kg deve ser um número maior ou igual a zero');
   }
 }
 
@@ -45,8 +38,9 @@ export const materialService = {
       throw erro(400, 'Os dados do material devem ser um objeto');
     }
     validarCamposEditaveis(dados);
-    const { tipo, marca, preco, qtdEmGramas } = dados;
-    const dadosMaterial = { tipo, marca, preco, qtdEmGramas };
+    const precoPorKg = dados.precoPorKg ?? dados.preco;
+    const { tipo, marca } = dados;
+    const dadosMaterial = { tipo, marca, precoPorKg };
     validarMaterial(dadosMaterial);
     return materialModel.inserir(dadosMaterial);
   },
@@ -58,9 +52,16 @@ export const materialService = {
       throw erro(400, 'Os dados de atualização devem ser um objeto');
     }
     validarCamposEditaveis(dados);
-    const dadosAtualizados = { ...atual, ...dados };
+    const dadosNormalizados = {
+      ...dados,
+      ...(dados.precoPorKg == null && dados.preco != null
+        ? { precoPorKg: dados.preco }
+        : {}),
+    };
+    delete dadosNormalizados.preco;
+    const dadosAtualizados = { ...atual, ...dadosNormalizados };
     validarMaterial(dadosAtualizados);
-    return materialModel.atualizar(id, dados);
+    return materialModel.atualizar(id, dadosNormalizados);
   },
 
   remover(id) {

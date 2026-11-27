@@ -1,6 +1,6 @@
 import { db } from '../db.js';
 
-const campos = 'id, peso, tamanho, tempo_de_impressao AS tempoDeImpressao';
+const campos = 'id, peso, tamanho';
 
 export const modelo3DModel = {
   listar() {
@@ -11,10 +11,10 @@ export const modelo3DModel = {
     return db.prepare(`SELECT ${campos} FROM modelos3d WHERE id = ?`).get(id) ?? null;
   },
 
-  inserir({ peso, tamanho, tempoDeImpressao }) {
+  inserir({ peso, tamanho }) {
     const resultado = db
-      .prepare('INSERT INTO modelos3d (peso, tamanho, tempo_de_impressao) VALUES (?, ?, ?)')
-      .run(peso, tamanho, tempoDeImpressao);
+      .prepare('INSERT INTO modelos3d (peso, tamanho) VALUES (?, ?)')
+      .run(peso, tamanho);
     return this.buscarPorId(Number(resultado.lastInsertRowid));
   },
 
@@ -23,8 +23,8 @@ export const modelo3DModel = {
     if (!atual) return null;
     const atualizado = { ...atual, ...dados, id };
     db.prepare(
-      'UPDATE modelos3d SET peso = ?, tamanho = ?, tempo_de_impressao = ? WHERE id = ?',
-    ).run(atualizado.peso, atualizado.tamanho, atualizado.tempoDeImpressao, id);
+      'UPDATE modelos3d SET peso = ?, tamanho = ? WHERE id = ?',
+    ).run(atualizado.peso, atualizado.tamanho, id);
     return this.buscarPorId(id);
   },
 

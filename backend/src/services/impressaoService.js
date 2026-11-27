@@ -1,8 +1,9 @@
 import { impressaoModel } from '../models/impressaoModel.js';
 import { modelo3DModel } from '../models/modelo3DModel.js';
+import { materialModel } from '../models/materialModel.js';
 import { erro } from '../routes/erro.js';
 
-const camposEditaveis = ['modelo3DId', 'custo', 'tamanho'];
+const camposEditaveis = ['modelo3DId', 'materialId', 'tamanho'];
 
 function validarTamanho(tamanho) {
   if (typeof tamanho === 'number') {
@@ -21,9 +22,9 @@ function validarTamanho(tamanho) {
   }
 }
 
-function validarImpressao({ modelo3DId, custo, tamanho }) {
-  if (modelo3DId == null || custo == null || tamanho == null) {
-    throw erro(400, 'Campos "modelo3DId", "custo" e "tamanho" são obrigatórios');
+function validarImpressao({ modelo3DId, materialId, tamanho }) {
+  if (modelo3DId == null || materialId == null || tamanho == null) {
+    throw erro(400, 'Campos "modelo3DId", "materialId" e "tamanho" são obrigatórios');
   }
   if (!Number.isInteger(modelo3DId) || modelo3DId <= 0) {
     throw erro(400, 'O modelo 3D informado é inválido');
@@ -31,8 +32,11 @@ function validarImpressao({ modelo3DId, custo, tamanho }) {
   if (!modelo3DModel.buscarPorId(modelo3DId)) {
     throw erro(404, 'Modelo 3D não encontrado');
   }
-  if (typeof custo !== 'number' || !Number.isFinite(custo) || custo < 0) {
-    throw erro(400, 'O custo deve ser um número maior ou igual a zero');
+  if (!Number.isInteger(materialId) || materialId <= 0) {
+    throw erro(400, 'O material informado é inválido');
+  }
+  if (!materialModel.buscarPorId(materialId)) {
+    throw erro(404, 'Material não encontrado');
   }
   validarTamanho(tamanho);
 }
@@ -58,10 +62,13 @@ export const impressaoService = {
       throw erro(400, 'Os dados da impressão devem ser um objeto');
     }
     validarCamposEditaveis(dados);
-    const { modelo3DId, custo, tamanho } = dados;
-    const dadosImpressao = { modelo3DId, custo, tamanho };
+    const { modelo3DId, materialId, tamanho } = dados;
+    const dadosImpressao = { modelo3DId, materialId, tamanho };
     validarImpressao(dadosImpressao);
-    return impressaoModel.inserir(dadosImpressao);
+    const modelo = modelo3DModel.buscarPorId(modelo3DId);
+    const material = materialModel.buscarPorId(materialId);
+    const custo = Number(((material.precoPorKg / 1000) * modelo.peso).toFixed(2));
+    return impressaoModel.inserir({ ...dadosImpressao, custo });
   },
 
   atualizar(id, dados = {}) {
@@ -71,8 +78,12 @@ export const impressaoService = {
       throw erro(400, 'Os dados de atualização devem ser um objeto');
     }
     validarCamposEditaveis(dados);
-    validarImpressao({ ...atual, ...dados });
-    return impressaoModel.atualizar(id, dados);
+    const dadosAtualizados = { ...atual, ...dados };
+    validarImpressao(dadosAtualizados);
+    const modelo = modelo3DModel.buscarPorId(dadosAtualizados.modelo3DId);
+    const material = materialModel.buscarPorId(dadosAtualizados.materialId);
+    const custo = Number(((material.precoPorKg / 1000) * modelo.peso).toFixed(2));
+    return impressaoModel.atualizar(id, { ...dados, custo });
   },
 
   remover(id) {

@@ -2,7 +2,6 @@ const el = {
   form: document.querySelector('#form-modelo'),
   peso: document.querySelector('#mod-peso'),
   tamanho: document.querySelector('#mod-tamanho'),
-  tempo: document.querySelector('#mod-tempo'),
   salvar: document.querySelector('#mod-salvar'),
   cancelar: document.querySelector('#mod-cancelar'),
   carregando: document.querySelector('#modelos-carregando'),
@@ -47,7 +46,6 @@ function linha(modelo, editandoId, salvando) {
     celula(String(modelo.id), 'numero'),
     celula(modelo.tamanho),
     celula(`${modelo.peso} g`, 'numero text-nowrap'),
-    celula(`${modelo.tempoDeImpressao} s`, 'numero text-nowrap'),
     acoes,
   );
   return tr;
@@ -75,7 +73,6 @@ export const modelo3DView = {
   preencherForm(modelo) {
     el.peso.value = modelo.peso;
     el.tamanho.value = modelo.tamanho;
-    el.tempo.value = modelo.tempoDeImpressao;
     el.peso.focus();
   },
 

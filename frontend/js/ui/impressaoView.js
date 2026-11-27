@@ -1,7 +1,7 @@
 const el = {
   form: document.querySelector('#form-impressao'),
   modelo: document.querySelector('#imp-modelo'),
-  custo: document.querySelector('#imp-custo'),
+  material: document.querySelector('#imp-material'),
   tamanho: document.querySelector('#imp-tamanho'),
   salvar: document.querySelector('#imp-salvar'),
   cancelar: document.querySelector('#imp-cancelar'),
@@ -38,10 +38,11 @@ function botao(texto, acao, id, classe) {
   return button;
 }
 
-function linha(impressao, modelos, editandoId, salvando) {
+function linha(impressao, modelos, materiais, editandoId, salvando) {
   const tr = document.createElement('tr');
   if (impressao.id === editandoId) tr.className = 'editando';
   const modelo = modelos.find((item) => item.id === impressao.modelo3DId);
+  const material = materiais.find((item) => item.id === impressao.materialId);
 
   const acoes = celula('', 'text-end text-nowrap');
   const editar = botao('Editar', 'editar', impressao.id, 'btn-outline-primary me-1');
@@ -53,6 +54,7 @@ function linha(impressao, modelos, editandoId, salvando) {
   tr.append(
     celula(String(impressao.id), 'numero'),
     celula(modelo ? `#${modelo.id} · ${modelo.tamanho}` : `#${impressao.modelo3DId}`),
+    celula(material ? `#${material.id} · ${material.tipo} · ${material.marca}` : `#${impressao.materialId}`),
     celula(String(impressao.tamanho)),
     celula(moeda.format(impressao.custo), 'numero text-nowrap'),
     acoes,
@@ -61,7 +63,7 @@ function linha(impressao, modelos, editandoId, salvando) {
 }
 
 export const impressaoView = {
-  render({ status, impressoes, modelos, erro, editandoId, salvando }) {
+  render({ status, impressoes, modelos, materiais, erro, editandoId, salvando }) {
     el.carregando.classList.toggle('d-none', status !== 'carregando');
     el.erro.classList.toggle('d-none', status !== 'erro');
     el.vazio.classList.toggle('d-none', status !== 'vazio');
@@ -69,14 +71,16 @@ export const impressaoView = {
 
     el.erroMsg.textContent = erro ?? '';
     el.linhas.replaceChildren(
-      ...impressoes.map((impressao) => linha(impressao, modelos, editandoId, salvando)),
+      ...impressoes.map((impressao) => linha(impressao, modelos, materiais, editandoId, salvando)),
     );
     el.total.textContent = String(impressoes.length);
     el.custoTotal.textContent = moeda.format(
       impressoes.reduce((total, impressao) => total + impressao.custo, 0),
     );
 
-    el.salvar.disabled = salvando || el.modelo.dataset.temModelos !== 'true';
+    el.salvar.disabled = salvando
+      || el.modelo.dataset.temModelos !== 'true'
+      || el.material.dataset.temMateriais !== 'true';
     el.salvar.textContent = salvando
       ? 'Salvando…'
       : editandoId ? 'Salvar alterações' : 'Registrar impressão';
@@ -85,8 +89,8 @@ export const impressaoView = {
 
   preencherForm(impressao) {
     el.modelo.value = String(impressao.modelo3DId);
+    el.material.value = String(impressao.materialId);
     el.tamanho.value = impressao.tamanho;
-    el.custo.value = impressao.custo;
     el.tamanho.focus();
   },
 
@@ -114,6 +118,27 @@ export const impressaoView = {
     el.modelo.disabled = modelos.length === 0;
     el.modelo.dataset.temModelos = String(modelos.length > 0);
     el.salvar.disabled = modelos.length === 0;
+  },
+
+  preencherMateriais(materiais) {
+    const selecionado = el.material.value;
+    const opcoes = materiais.map((material) => {
+      const option = document.createElement('option');
+      option.value = String(material.id);
+      option.textContent = `#${material.id} · ${material.tipo} · ${material.marca} · R$ ${material.precoPorKg}/kg`;
+      return option;
+    });
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = materiais.length
+      ? 'Selecione um material…'
+      : 'Cadastre um material primeiro';
+    el.material.replaceChildren(placeholder, ...opcoes);
+    el.material.value = materiais.some((material) => String(material.id) === selecionado)
+      ? selecionado
+      : '';
+    el.material.disabled = materiais.length === 0;
+    el.material.dataset.temMateriais = String(materiais.length > 0);
   },
 
   aoEnviar(fn) {
