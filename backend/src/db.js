@@ -21,7 +21,8 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS modelos3d (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     peso REAL NOT NULL,
-    tamanho TEXT NOT NULL
+    tamanho TEXT NOT NULL,
+    url TEXT
   );
 
   CREATE TABLE IF NOT EXISTS impressoes (
@@ -32,6 +33,11 @@ db.exec(`
     tamanho TEXT NOT NULL
   );
 `);
+
+const colunasModelos3d = db.prepare('PRAGMA table_info(modelos3d)').all();
+if (!colunasModelos3d.some((coluna) => coluna.name === 'url')) {
+  db.exec('ALTER TABLE modelos3d ADD COLUMN url TEXT');
+}
 
 // Migra bancos criados antes da remoção das entidades antigas.
 db.exec('DROP TABLE IF EXISTS impressoras');

@@ -1,10 +1,11 @@
 import { api } from '../api.js';
 
-function preparar({ peso, tamanho }) {
+function preparar({ peso, tamanho, url }) {
   const pesoTexto = String(peso ?? '').trim();
   const dados = {
     peso: Number(pesoTexto),
     tamanho: String(tamanho ?? '').trim(),
+    url: String(url ?? '').trim(),
   };
 
   if (!pesoTexto || !Number.isFinite(dados.peso) || dados.peso <= 0) {

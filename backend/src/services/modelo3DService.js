@@ -2,7 +2,7 @@ import { modelo3DModel } from '../models/modelo3DModel.js';
 import { impressaoModel } from '../models/impressaoModel.js';
 import { erro } from '../routes/erro.js';
 
-const camposEditaveis = ['peso', 'tamanho'];
+const camposEditaveis = ['peso', 'tamanho', 'url'];
 
 function validarTamanho(tamanho) {
   if (typeof tamanho === 'number') {
@@ -21,7 +21,7 @@ function validarTamanho(tamanho) {
   }
 }
 
-function validarModelo3D({ peso, tamanho }) {
+function validarModelo3D({ peso, tamanho, url }) {
   if (peso == null || tamanho == null) {
     throw erro(400, 'Campos "peso" e "tamanho" são obrigatórios');
   }
@@ -29,6 +29,9 @@ function validarModelo3D({ peso, tamanho }) {
     throw erro(400, 'O peso deve ser um número maior que zero');
   }
   validarTamanho(tamanho);
+  if (url != null && (typeof url !== 'string' || url.trim() === '')) {
+    throw erro(400, 'A URL deve ser um texto não vazio');
+  }
 }
 
 function validarCamposEditaveis(dados) {
@@ -52,8 +55,8 @@ export const modelo3DService = {
       throw erro(400, 'Os dados do modelo 3D devem ser um objeto');
     }
     validarCamposEditaveis(dados);
-    const { peso, tamanho } = dados;
-    const dadosModelo3D = { peso, tamanho };
+    const { peso, tamanho, url = null } = dados;
+    const dadosModelo3D = { peso, tamanho, url };
     validarModelo3D(dadosModelo3D);
     return modelo3DModel.inserir(dadosModelo3D);
   },

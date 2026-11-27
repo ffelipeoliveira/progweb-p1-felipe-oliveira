@@ -42,6 +42,10 @@
               <label for="mod-tamanho" class="form-label">Tamanho</label>
               <input id="mod-tamanho" name="tamanho" type="text" class="form-control" placeholder="Ex.: 10 × 10 × 10 cm" required>
             </div>
+            <div class="mb-3">
+              <label for="mod-url" class="form-label">Link</label>
+              <input id="mod-url" name="url" type="url" class="form-control" placeholder="Ex.: https://makerworld.com/pt/models/3649928-knitted-jesus" required>
+            </div>
             <div class="d-flex gap-2">
               <button id="mod-salvar" type="submit" class="btn btn-primary">Cadastrar modelo</button>
               <button id="mod-cancelar" type="button" class="btn btn-outline-secondary d-none">Cancelar</button>
@@ -72,7 +76,7 @@
             <p id="modelos-vazio" class="text-muted text-center py-4 mb-0 d-none">Nenhum modelo cadastrado. Use o formulário para adicionar o primeiro.</p>
             <div id="modelos-sucesso" class="table-responsive d-none">
               <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>#</th><th>Tamanho</th><th>Peso</th><th class="text-end">Ações</th></tr></thead>
+                <thead><tr><th>#</th><th>Tamanho</th><th>Peso</th><th>URL</th><th class="text-end">Ações</th></tr></thead>
                 <tbody id="modelos-linhas"></tbody>
               </table>
             </div>
