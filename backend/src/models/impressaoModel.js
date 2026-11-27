@@ -1,6 +1,6 @@
 import { db } from '../db.js';
 
-const campos = 'id, modelo_3d_id AS modelo3DId, material_id AS materialId, custo, tamanho';
+const campos = 'id, modelo_3d_id AS modelo3DId, material_id AS materialId, custo';
 
 export const impressaoModel = {
   listar() {
@@ -11,10 +11,10 @@ export const impressaoModel = {
     return db.prepare(`SELECT ${campos} FROM impressoes WHERE id = ?`).get(id) ?? null;
   },
 
-  inserir({ modelo3DId, materialId, custo, tamanho }) {
+  inserir({ modelo3DId, materialId, custo }) {
     const resultado = db
-      .prepare('INSERT INTO impressoes (modelo_3d_id, material_id, custo, tamanho) VALUES (?, ?, ?, ?)')
-      .run(modelo3DId, materialId, custo, tamanho);
+      .prepare('INSERT INTO impressoes (modelo_3d_id, material_id, custo) VALUES (?, ?, ?)')
+      .run(modelo3DId, materialId, custo);
     return this.buscarPorId(Number(resultado.lastInsertRowid));
   },
 
@@ -23,8 +23,8 @@ export const impressaoModel = {
     if (!atual) return null;
     const atualizado = { ...atual, ...dados, id };
     db.prepare(
-      'UPDATE impressoes SET modelo_3d_id = ?, material_id = ?, custo = ?, tamanho = ? WHERE id = ?',
-    ).run(atualizado.modelo3DId, atualizado.materialId, atualizado.custo, atualizado.tamanho, id);
+      'UPDATE impressoes SET modelo_3d_id = ?, material_id = ?, custo = ? WHERE id = ?',
+    ).run(atualizado.modelo3DId, atualizado.materialId, atualizado.custo, id);
     return this.buscarPorId(id);
   },
 

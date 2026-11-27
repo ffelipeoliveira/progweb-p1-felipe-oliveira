@@ -2,7 +2,6 @@ const el = {
   form: document.querySelector('#form-impressao'),
   modelo: document.querySelector('#imp-modelo'),
   material: document.querySelector('#imp-material'),
-  tamanho: document.querySelector('#imp-tamanho'),
   salvar: document.querySelector('#imp-salvar'),
   cancelar: document.querySelector('#imp-cancelar'),
   carregando: document.querySelector('#impressoes-carregando'),
@@ -55,7 +54,6 @@ function linha(impressao, modelos, materiais, editandoId, salvando) {
     celula(String(impressao.id), 'numero'),
     celula(modelo ? `#${modelo.id} · ${modelo.tamanho}` : `#${impressao.modelo3DId}`),
     celula(material ? `#${material.id} · ${material.tipo} · ${material.marca}` : `#${impressao.materialId}`),
-    celula(String(impressao.tamanho)),
     celula(moeda.format(impressao.custo), 'numero text-nowrap'),
     acoes,
   );
@@ -90,8 +88,6 @@ export const impressaoView = {
   preencherForm(impressao) {
     el.modelo.value = String(impressao.modelo3DId);
     el.material.value = String(impressao.materialId);
-    el.tamanho.value = impressao.tamanho;
-    el.tamanho.focus();
   },
 
   limparForm() {

@@ -29,8 +29,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     modelo_3d_id INTEGER NOT NULL REFERENCES modelos3d(id),
     material_id INTEGER NOT NULL REFERENCES materiais(id),
-    custo REAL NOT NULL,
-    tamanho TEXT NOT NULL
+    custo REAL NOT NULL
   );
 `);
 
@@ -53,6 +52,9 @@ const colunasImpressoes = db.prepare('PRAGMA table_info(impressoes)').all();
 if (!colunasImpressoes.some((coluna) => coluna.name === 'material_id')) {
   db.exec('ALTER TABLE impressoes ADD COLUMN material_id INTEGER');
 }
+if (colunasImpressoes.some((coluna) => coluna.name === 'tamanho')) {
+  db.exec('ALTER TABLE impressoes DROP COLUMN tamanho');
+}
 
 // Dados de exemplo: só entram se o banco estiver vazio.
 // No Render grátis o arquivo some a cada reinício; assim a demo nunca abre vazia.
@@ -69,8 +71,8 @@ if (total === 0) {
       .run('PLA', 'Exemplo', 120, 1000);
     materialId = Number(novoMaterial.lastInsertRowid);
   }
-  db.prepare(`INSERT INTO impressoes (modelo_3d_id, material_id, custo, tamanho)
-              VALUES (?, ?, ?, ?)`)
-    .run(r.lastInsertRowid, materialId, 0.48, "40x90x5 cm");
+  db.prepare(`INSERT INTO impressoes (modelo_3d_id, material_id, custo)
+              VALUES (?, ?, ?)`)
+    .run(r.lastInsertRowid, materialId, 0.48);
 }
 

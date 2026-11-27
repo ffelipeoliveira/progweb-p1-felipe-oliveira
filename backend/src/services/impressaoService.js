@@ -3,28 +3,11 @@ import { modelo3DModel } from '../models/modelo3DModel.js';
 import { materialModel } from '../models/materialModel.js';
 import { erro } from '../routes/erro.js';
 
-const camposEditaveis = ['modelo3DId', 'materialId', 'tamanho'];
+const camposEditaveis = ['modelo3DId', 'materialId'];
 
-function validarTamanho(tamanho) {
-  if (typeof tamanho === 'number') {
-    if (!Number.isFinite(tamanho) || tamanho < 0) {
-      throw erro(400, 'O tamanho deve ser um número maior ou igual a zero');
-    }
-    return;
-  }
-
-  if (
-    typeof tamanho !== 'string' ||
-    tamanho.trim() === '' ||
-    /(?:^|[xX×,*;\s])-\s*(?:\d+(?:[.,]\d*)?|[.,]\d+)/.test(tamanho)
-  ) {
-    throw erro(400, 'O tamanho é obrigatório e não pode conter valores negativos');
-  }
-}
-
-function validarImpressao({ modelo3DId, materialId, tamanho }) {
-  if (modelo3DId == null || materialId == null || tamanho == null) {
-    throw erro(400, 'Campos "modelo3DId", "materialId" e "tamanho" são obrigatórios');
+function validarImpressao({ modelo3DId, materialId }) {
+  if (modelo3DId == null || materialId == null) {
+    throw erro(400, 'Campos "modelo3DId" e "materialId" são obrigatórios');
   }
   if (!Number.isInteger(modelo3DId) || modelo3DId <= 0) {
     throw erro(400, 'O modelo 3D informado é inválido');
@@ -38,7 +21,6 @@ function validarImpressao({ modelo3DId, materialId, tamanho }) {
   if (!materialModel.buscarPorId(materialId)) {
     throw erro(404, 'Material não encontrado');
   }
-  validarTamanho(tamanho);
 }
 
 function validarCamposEditaveis(dados) {
@@ -62,8 +44,8 @@ export const impressaoService = {
       throw erro(400, 'Os dados da impressão devem ser um objeto');
     }
     validarCamposEditaveis(dados);
-    const { modelo3DId, materialId, tamanho } = dados;
-    const dadosImpressao = { modelo3DId, materialId, tamanho };
+    const { modelo3DId, materialId } = dados;
+    const dadosImpressao = { modelo3DId, materialId };
     validarImpressao(dadosImpressao);
     const modelo = modelo3DModel.buscarPorId(modelo3DId);
     const material = materialModel.buscarPorId(materialId);

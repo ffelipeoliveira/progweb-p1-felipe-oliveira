@@ -13,7 +13,7 @@ A partir do preço por kg do material e do peso em gramas do modelo 3D é possí
 |---|---|---|
 | Material | id, tipo, marca, precoPorKg | consumido na impressão |
 | Modelo3D | id, peso, tamanho, url | modelo usado para impressões |
-| Impressao | id, modelo3DId, materialId, custo, tamanho | impressão de um modelo 3D |
+| Impressao | id, modelo3DId, materialId, custo | impressão de um modelo 3D |
 
 ## 3. Diagrama de classes
 
@@ -37,7 +37,6 @@ classDiagram
     +id
     +modelo3DId
     +custo
-    +tamanho
   }
   class MaterialRepository {
     <<contrato>>

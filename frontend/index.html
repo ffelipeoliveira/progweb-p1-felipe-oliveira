@@ -148,10 +148,6 @@
               <label for="imp-material" class="form-label">Material</label>
               <select id="imp-material" name="materialId" class="form-select" required><option value="">Carregando materiais…</option></select>
             </div>
-            <div class="mb-3">
-              <label for="imp-tamanho" class="form-label">Tamanho da impressão</label>
-              <input id="imp-tamanho" name="tamanho" type="text" class="form-control" placeholder="Ex.: 10 × 10 × 10 cm" required>
-            </div>
             <div class="d-flex gap-2">
               <button id="imp-salvar" type="submit" class="btn btn-primary">Registrar impressão</button>
               <button id="imp-cancelar" type="button" class="btn btn-outline-secondary d-none">Cancelar</button>
@@ -177,7 +173,7 @@
             <p id="impressoes-vazio" class="text-muted text-center py-4 mb-0 d-none">Nenhuma impressão registrada. Cadastre um modelo e registre a primeira.</p>
             <div id="impressoes-sucesso" class="table-responsive d-none">
               <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>#</th><th>Modelo 3D</th><th>Material</th><th>Tamanho</th><th>Custo</th><th class="text-end">Ações</th></tr></thead>
+                <thead><tr><th>#</th><th>Modelo 3D</th><th>Material</th><th>Custo</th><th class="text-end">Ações</th></tr></thead>
                 <tbody id="impressoes-linhas"></tbody>
               </table>
             </div>
