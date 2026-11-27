@@ -62,7 +62,7 @@ if (total === 0) {
     .prepare('INSERT INTO modelos3d (peso, tamanho, tempo_de_impressao) VALUES (?, ?, ?)')
     .run('4', '40x90x5 cm', '1500');
   db.prepare(`INSERT INTO impressoes (modelo_3d_id, custo, tamanho)
-              VALUES (?, ?, ?, ?)`)
+              VALUES (?, ?, ?)`)
     .run(r.lastInsertRowid, 1, "40x90x5 cm");
 }
 
