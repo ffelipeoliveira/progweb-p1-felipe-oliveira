@@ -20,6 +20,14 @@ const moeda = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL',
 });
 
+let salvandoAtual = false;
+
+function atualizarBotaoSalvar() {
+  el.salvar.disabled = salvandoAtual
+    || el.modelo.dataset.temModelos !== 'true'
+    || el.material.dataset.temMateriais !== 'true';
+}
+
 function celula(texto, classe = '') {
   const td = document.createElement('td');
   td.textContent = texto;
@@ -62,6 +70,7 @@ function linha(impressao, modelos, materiais, editandoId, salvando) {
 
 export const impressaoView = {
   render({ status, impressoes, modelos, materiais, erro, editandoId, salvando }) {
+    salvandoAtual = salvando;
     el.carregando.classList.toggle('d-none', status !== 'carregando');
     el.erro.classList.toggle('d-none', status !== 'erro');
     el.vazio.classList.toggle('d-none', status !== 'vazio');
@@ -76,9 +85,7 @@ export const impressaoView = {
       impressoes.reduce((total, impressao) => total + impressao.custo, 0),
     );
 
-    el.salvar.disabled = salvando
-      || el.modelo.dataset.temModelos !== 'true'
-      || el.material.dataset.temMateriais !== 'true';
+    atualizarBotaoSalvar();
     el.salvar.textContent = salvando
       ? 'Salvando…'
       : editandoId ? 'Salvar alterações' : 'Registrar impressão';
@@ -113,7 +120,7 @@ export const impressaoView = {
       : '';
     el.modelo.disabled = modelos.length === 0;
     el.modelo.dataset.temModelos = String(modelos.length > 0);
-    el.salvar.disabled = modelos.length === 0;
+    atualizarBotaoSalvar();
   },
 
   preencherMateriais(materiais) {
@@ -135,6 +142,7 @@ export const impressaoView = {
       : '';
     el.material.disabled = materiais.length === 0;
     el.material.dataset.temMateriais = String(materiais.length > 0);
+    atualizarBotaoSalvar();
   },
 
   aoEnviar(fn) {
