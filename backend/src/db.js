@@ -38,11 +38,6 @@ if (!colunasModelos3d.some((coluna) => coluna.name === 'url')) {
   db.exec('ALTER TABLE modelos3d ADD COLUMN url TEXT');
 }
 
-// Migra bancos criados antes da remoção das entidades antigas.
-db.exec('DROP TABLE IF EXISTS impressoras');
-db.exec('DROP TABLE IF EXISTS embalagens');
-db.exec('DROP TABLE IF EXISTS vendas');
-
 const colunasModelos = db.prepare('PRAGMA table_info(modelos3d)').all();
 if (colunasModelos.some((coluna) => coluna.name === 'tempo_de_impressao')) {
   db.exec('ALTER TABLE modelos3d DROP COLUMN tempo_de_impressao');
